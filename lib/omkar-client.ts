@@ -219,7 +219,7 @@ export async function fetchFullCompanyDataFromOmkar(
     const encodedSymbol = encodeURIComponent(targetSymbol);
 
     // Call Omkar Cloud Google Finance scraper endpoint
-    const url = `https://google-finance-scraper.omkar.cloud/quote?ticker=${encodedSymbol}`;
+    const url = `https://google-finance-scraper.omkar.cloud/quote?symbol=${encodedSymbol}`;
 
     const res = await fetch(url, {
       method: "GET",
