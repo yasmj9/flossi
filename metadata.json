@@ -1,0 +1,7 @@
+{
+  "name": "flossi",
+  "description": "Flossi Next.js web application imported from GitHub",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
