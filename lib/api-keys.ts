@@ -294,6 +294,23 @@ export async function testProviderConnection(
     } else if (provider === "jev") {
       // JEV AI live API test:
       // Uses TypeSafe AI systemone endpoint with Authorization Bearer header
+      const testPayload = {
+        model: "jev-latest",
+        state: {
+          test: "connection_ping",
+          service: "JEV AI",
+          market: "Casablanca Stock Exchange",
+          timestamp: new Date().toISOString(),
+        },
+        questions: {
+          connection_status: {
+            type: "choice",
+            question: "Is this API connection test successful?",
+            choices: ["YES", "NO"],
+          },
+        },
+      };
+
       const res = await fetch("https://api.typesafe.ai/v1/systemone", {
         method: "POST",
         headers: {
@@ -301,15 +318,7 @@ export async function testProviderConnection(
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({
-          state: "ping",
-          questions: {
-            ping: {
-              type: "nouls",
-              question: "Is this connection test valid?",
-            },
-          },
-        }),
+        body: JSON.stringify(testPayload),
         signal: controller.signal,
       });
 
@@ -332,13 +341,25 @@ export async function testProviderConnection(
       }
 
       const detailObj = data?.detail as Record<string, unknown> | undefined;
-      const detailMsg = (detailObj?.message as string) || (data?.message as string) || res.statusText;
-      let failureReason = `Connection failed (${res.status}): ${detailMsg}`;
+      const detailMsg =
+        (detailObj?.message as string) ||
+        (data?.message as string) ||
+        (data?.error as string) ||
+        (typeof data?.detail === "string" ? (data.detail as string) : null) ||
+        res.statusText;
+
+      let failureReason = `Connection failed (${res.status}): ${detailMsg || "Invalid request."}`;
 
       if (res.status === 401) {
-        failureReason = `Invalid API key: ${detailMsg || "JEV AI rejected the key."}`;
+        failureReason = `Invalid API key (401): ${detailMsg || "JEV AI rejected the key as unauthorized."}`;
       } else if (res.status === 403) {
-        failureReason = `Access forbidden (${res.status}): ${detailMsg || "JEV AI forbidden."}`;
+        failureReason = `Access forbidden (403): ${detailMsg || "JEV AI access forbidden."}`;
+      } else if (res.status === 400) {
+        if (detailMsg?.toLowerCase().includes("invalid api key") || detailMsg?.toLowerCase().includes("unauthorized") || detailMsg?.toLowerCase().includes("api key")) {
+          failureReason = `Invalid API key (400): ${detailMsg}`;
+        } else {
+          failureReason = `Connection failed (${res.status}): ${detailMsg || "Invalid request."}`;
+        }
       }
 
       await updateTestStatus(provider, false, failureReason);

@@ -98,6 +98,7 @@ export async function analyzeWithJev(
 
   try {
     const payload = {
+      model: "jev-latest",
       state: normalizedState,
       questions: {
         investment_decision: {
