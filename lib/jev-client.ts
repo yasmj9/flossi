@@ -82,6 +82,22 @@ export interface JevDecisionResult {
  * - decision probabilities
  * - decision reasons (positive factors, negative factors, risks)
  */
+function createChoiceQuestion(instructions: string, options: string[]): {
+  type: "choice";
+  instructions: string;
+  criteria: Record<string, string>;
+} {
+  const criteria: Record<string, string> = {};
+  for (const opt of options) {
+    criteria[opt] = opt;
+  }
+  return {
+    type: "choice",
+    instructions,
+    criteria,
+  };
+}
+
 export async function analyzeWithJev(
   normalizedState: Record<string, unknown>
 ): Promise<JevDecisionResult> {
@@ -103,14 +119,17 @@ export async function analyzeWithJev(
       questions: {
         investment_decision: {
           type: "choice",
-          question:
+          instructions:
             "Based strictly on the provided factual stock data, market quotes, financial reports, valuation ratios, and recent news for this Casablanca Stock Exchange company, what is the investment recommendation? Choose exactly one option.",
-          choices: ["BUY", "HOLD", "SELL"],
+          criteria: {
+            BUY: "Strong upside potential with favorable risk-reward and solid fundamentals",
+            HOLD: "Fair valuation, balanced risk-reward, or wait for catalyst/pullback",
+            SELL: "Elevated valuation, deteriorating fundamentals, or downside risk",
+          },
         },
-        positive_factor_1: {
-          type: "choice",
-          question: "What is the primary positive factor or financial strength supporting this company?",
-          choices: [
+        positive_factor_1: createChoiceQuestion(
+          "What is the primary positive factor or financial strength supporting this company?",
+          [
             "Profitability and operational margins have improved",
             "ROE is strong and demonstrates capital efficiency",
             "Valuation is attractive compared with historical levels",
@@ -119,98 +138,94 @@ export async function analyzeWithJev(
             "Defensive market leadership on Casablanca Stock Exchange",
             "Favorable sector tailwinds and operational momentum",
             "None / Neutral performance",
-          ],
-        },
-        positive_factor_2: {
-          type: "choice",
-          question: "What is a secondary positive financial strength for this asset?",
-          choices: [
+          ]
+        ),
+        positive_factor_2: createChoiceQuestion(
+          "What is a secondary positive financial strength for this asset?",
+          [
             "Valuation multiples reflect an attractive entry point",
             "Healthy cash generation and working capital discipline",
             "Solid institutional position within Morocco",
             "Steady revenue trajectory and market share stability",
             "Debt structure remains conservative and manageable",
             "None / No additional primary strength",
-          ],
-        },
-        positive_factor_3: {
-          type: "choice",
-          question: "What is another notable positive factor supporting the investment thesis?",
-          choices: [
+          ]
+        ),
+        positive_factor_3: createChoiceQuestion(
+          "What is another notable positive factor supporting the investment thesis?",
+          [
             "Sustained dividend yield supports total shareholder return",
             "Prudent financial charges relative to operating profit",
             "Resilient core demand across economic cycles",
             "Positive operational milestones from recent corporate updates",
             "None / No additional factor",
-          ],
-        },
-        negative_factor_1: {
-          type: "choice",
-          question: "What is the primary negative factor or financial weakness?",
-          choices: [
+          ]
+        ),
+        negative_factor_1: createChoiceQuestion(
+          "What is the primary negative factor or financial weakness?",
+          [
             "Debt has increased or leverage ratio is elevated",
             "Operating margins or profitability face compression",
             "Valuation leaves limited margin of safety at current levels",
             "Payout ratio or dividend sustainability shows pressure",
             "Subdued revenue growth or cyclical volume slowdown",
             "None / No significant financial weakness",
-          ],
-        },
-        negative_factor_2: {
-          type: "choice",
-          question: "What is a secondary weakness or financial concern?",
-          choices: [
+          ]
+        ),
+        negative_factor_2: createChoiceQuestion(
+          "What is a secondary weakness or financial concern?",
+          [
             "Working capital intensity or constrained free cash conversion",
             "Increasing financial charges weighing on net income",
             "Limited revenue diversification",
             "Recent stock performance lagging broader CSE benchmarks",
             "None / No secondary weakness",
-          ],
-        },
-        risk_factor_1: {
-          type: "choice",
-          question: "What is the primary investment risk?",
-          choices: [
+          ]
+        ),
+        risk_factor_1: createChoiceQuestion(
+          "What is the primary investment risk?",
+          [
             "Recent price is close to resistance levels",
             "Sensitivity to Moroccan macroeconomic and interest rate cycles",
             "Trading liquidity and volume constraints on Casablanca Stock Exchange",
             "Input cost inflation or commodity price volatility",
             "Execution risk on capital expenditure projects",
             "None / Low operational risk",
-          ],
-        },
-        risk_factor_2: {
-          type: "choice",
-          question: "What is a secondary investment risk to monitor?",
-          choices: [
+          ]
+        ),
+        risk_factor_2: createChoiceQuestion(
+          "What is a secondary investment risk to monitor?",
+          [
             "Broader market volatility on Casablanca Stock Exchange",
             "Regulatory or sector policy adjustments in Morocco",
             "Potential valuation multiple contraction if growth slows",
             "Foreign exchange or external trade exposure",
             "None / Minimal additional risk",
-          ],
-        },
-        investment_context: {
-          type: "choice",
-          question: "What is the overall investment profile and context for this company?",
-          choices: [
+          ]
+        ),
+        investment_context: createChoiceQuestion(
+          "What is the overall investment profile and context for this company?",
+          [
             "Defensive core holding with reliable income profile",
             "Cyclical quality company positioned for market recovery",
             "High-quality blue chip with long-term compounding potential",
             "Value asset with attractive valuation but needing catalyst",
             "Speculative position requiring disciplined risk management",
-          ],
-        },
+          ]
+        ),
         valuation_assessment: {
           type: "choice",
-          question:
+          instructions:
             "Based strictly on the valuation section, current price, current PER, 5-year historical and average PER, BPA/EPS trajectory, ROE, dividend yield, payout ratio, and earnings growth, what is the valuation judgment for this stock? Choose exactly one option: UNDERVALUED, FAIRLY_VALUED, or OVERVALUED.",
-          choices: ["UNDERVALUED", "FAIRLY_VALUED", "OVERVALUED"],
+          criteria: {
+            UNDERVALUED: "Stock is trading below its fair value / historical valuation multiples",
+            FAIRLY_VALUED: "Stock is trading in line with its fair value and historical multiples",
+            OVERVALUED: "Stock is trading above its fair value / historical valuation multiples",
+          },
         },
-        valuation_reason_1: {
-          type: "choice",
-          question: "What is the primary key reason supporting this valuation judgment?",
-          choices: [
+        valuation_reason_1: createChoiceQuestion(
+          "What is the primary key reason supporting this valuation judgment?",
+          [
             "Current PER is below the 5-year average",
             "Current PER is above historical average levels",
             "Valuation multiples align with historical Casablanca Stock Exchange averages",
@@ -219,12 +234,11 @@ export async function analyzeWithJev(
             "ROE is strong and supports valuation resilience",
             "Elevated multiple leaves limited margin of safety",
             "Earnings growth has moderated relative to historical pace",
-          ],
-        },
-        valuation_reason_2: {
-          type: "choice",
-          question: "What is a secondary key reason supporting this valuation judgment?",
-          choices: [
+          ]
+        ),
+        valuation_reason_2: createChoiceQuestion(
+          "What is a secondary key reason supporting this valuation judgment?",
+          [
             "EPS has increased over the recent years",
             "Dividend yield remains attractive",
             "Current PER is below the 5-year average",
@@ -233,30 +247,34 @@ export async function analyzeWithJev(
             "Payout ratio is consistent with current valuation levels",
             "Subdued earnings growth constrains multiple expansion",
             "None / Primary reason is sufficient",
-          ],
-        },
-        valuation_reason_3: {
-          type: "choice",
-          question: "What is a third contributing reason for the valuation judgment if applicable?",
-          choices: [
+          ]
+        ),
+        valuation_reason_3: createChoiceQuestion(
+          "What is a third contributing reason for the valuation judgment if applicable?",
+          [
             "Dividend yield remains attractive",
             "Resilient earnings trajectory across past 5 years",
             "Balance sheet strength preserves equity value",
             "Balanced risk-reward profile at current market quote",
             "Prudent valuation relative to operational cash flow",
             "None / No additional factor",
-          ],
-        },
+          ]
+        ),
         technical_attractiveness: {
           type: "choice",
-          question:
+          instructions:
             "Based strictly on the factual technical structure analysis (current trend, support and resistance zones, breakout/breakdown status, volume context, recent volatility, and distance to key zones), what is the technical attractiveness for this Casablanca Stock Exchange stock? Choose exactly one option: VERY_WEAK, WEAK, NEUTRAL, STRONG, or VERY_STRONG.",
-          choices: ["VERY_WEAK", "WEAK", "NEUTRAL", "STRONG", "VERY_STRONG"],
+          criteria: {
+            VERY_STRONG: "Exceptionally favorable technical structure with strong upside momentum",
+            STRONG: "Favorable technical setup supported by key zones and constructive trend",
+            NEUTRAL: "Balanced technical structure or rangebound consolidation",
+            WEAK: "Subdued technical posture near resistance or weakening support",
+            VERY_WEAK: "Deteriorating technical structure or breakdown",
+          },
         },
-        technical_reason_1: {
-          type: "choice",
-          question: "What is the primary technical reason supporting this technical judgment?",
-          choices: [
+        technical_reason_1: createChoiceQuestion(
+          "What is the primary technical reason supporting this technical judgment?",
+          [
             "Price remains above an important support zone",
             "Recent breakout is supported by constructive volume",
             "Price is in a well-defined uptrend with higher lows",
@@ -267,12 +285,11 @@ export async function analyzeWithJev(
             "Recent price action shows breakdown below previous support level",
             "Volatility is elevated near critical price threshold",
             "Trading is within a tight consolidation range awaiting directional breakout",
-          ],
-        },
-        technical_reason_2: {
-          type: "choice",
-          question: "What is a secondary technical reason or zone observation?",
-          choices: [
+          ]
+        ),
+        technical_reason_2: createChoiceQuestion(
+          "What is a secondary technical reason or zone observation?",
+          [
             "Nearest resistance is relatively close",
             "Distance to nearest support zone offers favorable risk-reward cushion",
             "Volume context confirms current technical move",
@@ -281,35 +298,33 @@ export async function analyzeWithJev(
             "Moderate volatility indicates steady price discovery",
             "Subdued volume suggests consolidation rather than distribution",
             "None / Primary observation is sufficient",
-          ],
-        },
-        technical_reason_3: {
-          type: "choice",
-          question: "What is an additional technical observation if applicable?",
-          choices: [
+          ]
+        ),
+        technical_reason_3: createChoiceQuestion(
+          "What is an additional technical observation if applicable?",
+          [
             "Support zone provides an established factual price floor",
             "Distance to nearest resistance leaves upside room",
             "Volume remains consistent with average trading activity on Casablanca exchange",
             "Controlled volatility supports technical stability",
             "None / No additional technical factor",
-          ],
-        },
+          ]
+        ),
         news_impact: {
           type: "choice",
-          question:
+          instructions:
             "Based strictly on the provided recent company-related news items and corporate press releases in the payload, how does the recent news impact the overall investment case? Choose exactly one option: VERY_NEGATIVE, NEGATIVE, NEUTRAL, POSITIVE, or VERY_POSITIVE.",
-          choices: [
-            "VERY_NEGATIVE",
-            "NEGATIVE",
-            "NEUTRAL",
-            "POSITIVE",
-            "VERY_POSITIVE",
-          ],
+          criteria: {
+            VERY_POSITIVE: "Substantially positive corporate catalysts, earnings beat, or contracts",
+            POSITIVE: "Constructive operational developments and favorable corporate news",
+            NEUTRAL: "Routine announcements, mixed news items, or no material operational impact",
+            NEGATIVE: "Unfavorable earnings development, sector headwinds, or margin pressure",
+            VERY_NEGATIVE: "Severe operational, financial, or regulatory disruption",
+          },
         },
-        news_reason_1: {
-          type: "choice",
-          question: "What is the primary reason behind this news impact judgment?",
-          choices: [
+        news_reason_1: createChoiceQuestion(
+          "What is the primary reason behind this news impact judgment?",
+          [
             "Recent results exceeded expectations",
             "The company announced a significant new contract",
             "Recent news highlights solid operational expansion and partnership execution",
@@ -318,40 +333,42 @@ export async function analyzeWithJev(
             "Recent news notes margin compression, input cost inflation, or regulatory headwinds",
             "Challenging sector dynamics or volume slowdown highlighted in recent press",
             "No relevant recent news available",
-          ],
-        },
-        news_reason_2: {
-          type: "choice",
-          question: "What is a secondary news observation or context?",
-          choices: [
+          ]
+        ),
+        news_reason_2: createChoiceQuestion(
+          "What is a secondary news observation or context?",
+          [
             "The company announced a significant new contract",
             "Recent results exceeded expectations",
             "Strategic capital investments indicate long-term growth readiness",
             "Solid governance and dividend distribution reaffirm shareholder value",
             "Management guidance reflects cautious optimism amidst Moroccan macroeconomic conditions",
             "None / Primary observation is sufficient",
-          ],
-        },
-        news_reason_3: {
-          type: "choice",
-          question: "What is a third contributing news observation if applicable?",
-          choices: [
+          ]
+        ),
+        news_reason_3: createChoiceQuestion(
+          "What is a third contributing news observation if applicable?",
+          [
             "Market leadership in core domestic segment reinforced by recent updates",
             "Positive sector tailwinds on Casablanca Stock Exchange benefit commercial position",
             "Recent corporate milestones confirm healthy operational execution",
             "None / No additional news factor",
-          ],
-        },
+          ]
+        ),
         entry_zone_1_attractiveness: {
           type: "choice",
-          question:
+          instructions:
             "Evaluate candidate entry zone #1 (primary support zone). How attractive is this entry opportunity? Choose exactly one option: LOW, MEDIUM, HIGH, or VERY_HIGH.",
-          choices: ["VERY_HIGH", "HIGH", "MEDIUM", "LOW"],
+          criteria: {
+            VERY_HIGH: "Highly attractive entry point with outstanding risk-reward margin",
+            HIGH: "Attractive entry point with solid downside support buffer",
+            MEDIUM: "Moderate entry attractiveness requiring selective sizing",
+            LOW: "Low entry attractiveness with limited buffer or elevated risk",
+          },
         },
-        entry_zone_1_reason: {
-          type: "choice",
-          question: "What is the primary reason for the evaluation of candidate entry zone #1?",
-          choices: [
+        entry_zone_1_reason: createChoiceQuestion(
+          "What is the primary reason for the evaluation of candidate entry zone #1?",
+          [
             "Strong historical support combined with attractive valuation",
             "Primary support level aligns with solid risk-reward buffer",
             "Factual floor level provides resilient downside protection",
@@ -359,43 +376,51 @@ export async function analyzeWithJev(
             "Conservative entry level with disciplined risk containment",
             "Moderate margin of safety at current support boundary",
             "Limited buffer if broader Casablanca market faces correction",
-          ],
-        },
+          ]
+        ),
         entry_zone_2_attractiveness: {
           type: "choice",
-          question:
+          instructions:
             "Evaluate candidate entry zone #2 (breakout retest or secondary consolidation). How attractive is this entry opportunity? Choose exactly one option: LOW, MEDIUM, HIGH, or VERY_HIGH.",
-          choices: ["VERY_HIGH", "HIGH", "MEDIUM", "LOW"],
+          criteria: {
+            VERY_HIGH: "Highly attractive entry point with outstanding risk-reward margin",
+            HIGH: "Attractive entry point with solid downside support buffer",
+            MEDIUM: "Moderate entry attractiveness requiring selective sizing",
+            LOW: "Low entry attractiveness with limited buffer or elevated risk",
+          },
         },
-        entry_zone_2_reason: {
-          type: "choice",
-          question: "What is the primary reason for the evaluation of candidate entry zone #2?",
-          choices: [
+        entry_zone_2_reason: createChoiceQuestion(
+          "What is the primary reason for the evaluation of candidate entry zone #2?",
+          [
             "Potential breakout retest, but with less margin of safety",
             "Secondary consolidation level offering alternative accumulation point",
             "Confirmation zone following directional breakout volume",
             "Favorable risk-reward balance on minor pullback",
             "Deeper pullback entry providing higher margin of safety",
             "Conditional entry requiring strict volume confirmation",
-          ],
-        },
+          ]
+        ),
         entry_zone_3_attractiveness: {
           type: "choice",
-          question:
+          instructions:
             "Evaluate candidate entry zone #3 (major long-term floor or deep support if available). How attractive is this entry opportunity? Choose: LOW, MEDIUM, HIGH, or VERY_HIGH.",
-          choices: ["VERY_HIGH", "HIGH", "MEDIUM", "LOW"],
+          criteria: {
+            VERY_HIGH: "Highly attractive entry point with outstanding risk-reward margin",
+            HIGH: "Attractive entry point with solid downside support buffer",
+            MEDIUM: "Moderate entry attractiveness requiring selective sizing",
+            LOW: "Low entry attractiveness with limited buffer or elevated risk",
+          },
         },
-        entry_zone_3_reason: {
-          type: "choice",
-          question: "What is the rationale for candidate entry zone #3?",
-          choices: [
+        entry_zone_3_reason: createChoiceQuestion(
+          "What is the rationale for candidate entry zone #3?",
+          [
             "Major 52-week or historical floor representing deep value entry",
             "High margin of safety but lower probability of immediate fill",
             "Strong defensive level during severe market pullbacks",
             "Long-term structural base with strong asymmetrical upside",
             "None / Zone not required",
-          ],
-        },
+          ]
+        ),
       },
     };
 

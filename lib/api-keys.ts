@@ -293,7 +293,7 @@ export async function testProviderConnection(
       };
     } else if (provider === "jev") {
       // JEV AI live API test:
-      // Uses TypeSafe AI systemone endpoint with Authorization Bearer header
+      // Uses TypeSafe AI / JEV AI systemone endpoint with Authorization Bearer header
       const testPayload = {
         model: "jev-latest",
         state: {
@@ -305,8 +305,11 @@ export async function testProviderConnection(
         questions: {
           connection_status: {
             type: "choice",
-            question: "Is this API connection test successful?",
-            choices: ["YES", "NO"],
+            instructions: "Is this API connection test received successfully?",
+            criteria: {
+              YES: "The connection ping is valid and operational",
+              NO: "The connection ping failed",
+            },
           },
         },
       };
@@ -340,13 +343,23 @@ export async function testProviderConnection(
         };
       }
 
-      const detailObj = data?.detail as Record<string, unknown> | undefined;
-      const detailMsg =
-        (detailObj?.message as string) ||
-        (data?.message as string) ||
-        (data?.error as string) ||
-        (typeof data?.detail === "string" ? (data.detail as string) : null) ||
-        res.statusText;
+      let detailMsg = res.statusText;
+      if (data) {
+        if (Array.isArray(data.detail)) {
+          detailMsg = (data.detail as Array<{ msg?: string; loc?: string[] }>)
+            .map((d) => (d.loc ? `${d.loc.slice(-1)[0]}: ${d.msg}` : d.msg || "Validation error"))
+            .join("; ");
+        } else if (typeof data.detail === "object" && data.detail !== null) {
+          const detailObj = data.detail as Record<string, unknown>;
+          detailMsg = (detailObj.message as string) || (detailObj.error as string) || JSON.stringify(data.detail);
+        } else if (typeof data.detail === "string") {
+          detailMsg = data.detail;
+        } else if (typeof data.message === "string") {
+          detailMsg = data.message;
+        } else if (typeof data.error === "string") {
+          detailMsg = data.error;
+        }
+      }
 
       let failureReason = `Connection failed (${res.status}): ${detailMsg || "Invalid request."}`;
 
