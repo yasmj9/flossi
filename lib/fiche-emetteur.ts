@@ -435,16 +435,208 @@ export function parseFicheEmetteurText(text: string): Partial<FicheEmetteurData>
     });
   }
 
+  // Also standalone dividend pattern: Dividende unitaire / DPA
+  const dpaMatch =
+    text.match(/(?:Dividende\s*(?:unitaire|par\s*action)?|DPA)\s*[:\s]*([\d\s]+[,\.]\d{1,2})\s*(?:MAD)?/i);
+  const standaloneDpa = dpaMatch ? parseNum(dpaMatch[1]) : null;
+
   if (dividendes.length > 0) {
     result.dividendes = dividendes;
+  } else if (standaloneDpa !== null) {
+    const curYear = new Date().getFullYear();
+    result.dividendes = [
+      {
+        annee: curYear - 1,
+        montantMAD: standaloneDpa,
+        type: "Ordinaire",
+        dateDetachement: null,
+      },
+    ];
   } else if (result.ticker === "ATW" && OFFICIAL_FICHES_EMETTEUR.ATW) {
     result.dividendes = OFFICIAL_FICHES_EMETTEUR.ATW.dividendes;
   }
 
-  // 9. Chiffres Clés (Multi-Year)
-  if (result.ticker === "ATW" && OFFICIAL_FICHES_EMETTEUR.ATW) {
-    result.chiffresCles = OFFICIAL_FICHES_EMETTEUR.ATW.chiffresCles;
+  // 9. Extract Standalone Ratios from text (broker factsheet or summary cards)
+  const perMatch =
+    text.match(/(?:Current\s*PER|PER\s*(?:\(x\)|x)?|P\/E|P\.E\.R)\s*[:\s]*([\d\s]+[,\.]\d{1,2})\s*x?/i);
+  const standalonePer = perMatch ? parseNum(perMatch[1]) : null;
+
+  const perAvgMatch =
+    text.match(/(?:5[- ]Year\s*Avg\s*PER|PER\s*moyen\s*(?:\(5\s*ans\)|5\s*ans)?|PER\s*historique)\s*[:\s]*([\d\s]+[,\.]\d{1,2})\s*x?/i);
+  const standalonePerAvg = perAvgMatch ? parseNum(perAvgMatch[1]) : null;
+
+  const epsMatch =
+    text.match(/(?:Current\s*EPS|BPA\s*(?:\(MAD\)|MAD)?|EPS|B[ée]n[ée]fice\s*(?:net)?\s*par\s*action)\s*[:\s]*([\d\s]+[,\.]\d{1,2})/i);
+  const standaloneEps = epsMatch ? parseNum(epsMatch[1]) : null;
+
+  const roeMatch =
+    text.match(/(?:ROE|Rentabilit[ée]\s*des\s*(?:capitaux|fonds)\s*propres|Rentabilit[ée]\s*financi[èe]re)\s*[:\s]*([\d\s]+[,\.]\d{1,2})\s*%/i);
+  const standaloneRoe = roeMatch ? parseNum(roeMatch[1]) : null;
+
+  const yieldMatch =
+    text.match(/(?:Dividend\s*Yield|Rendement\s*(?:du\s*dividende|brut)?|D\/Y|Rdt)\s*[:\s]*([\d\s]+[,\.]\d{1,2})\s*%/i);
+  const standaloneYield = yieldMatch ? parseNum(yieldMatch[1]) : null;
+
+  const payoutMatch =
+    text.match(/(?:Payout\s*(?:ratio)?|Pay-out|Taux\s*de\s*distribution)\s*[:\s]*([\d\s]+[,\.]\d{1,2})\s*%/i);
+  const standalonePayout = payoutMatch ? parseNum(payoutMatch[1]) : null;
+
+  // 10. Multi-Year Financial Indicators Table Parsing
+  // Identify year columns: e.g. "2021 2022 2023 2024 2025" or descending "2025 2024 2023 2022 2021"
+  const parsedChiffresCles: FicheChiffreCleAnnee[] = [];
+  const yearHeaderMatch = text.match(/(?:Ann[ée]e|Exercice|P[ée]riode)?\s*(\b201\d|\b202\d)\s+(\b201\d|\b202\d)\s+(\b201\d|\b202\d)(?:\s+(\b201\d|\b202\d))?(?:\s+(\b201\d|\b202\d))?/i);
+
+  let detectedYears: number[] = [];
+  if (yearHeaderMatch) {
+    detectedYears = [
+      parseInt(yearHeaderMatch[1], 10),
+      parseInt(yearHeaderMatch[2], 10),
+      parseInt(yearHeaderMatch[3], 10),
+      yearHeaderMatch[4] ? parseInt(yearHeaderMatch[4], 10) : null,
+      yearHeaderMatch[5] ? parseInt(yearHeaderMatch[5], 10) : null,
+    ].filter((y): y is number => y !== null && !isNaN(y) && y >= 2000 && y <= 2035);
   }
+
+  // Helper to extract a sequence of numbers from a table row corresponding to detected years
+  const extractRowNumbers = (rowLabelPattern: RegExp): (number | null)[] => {
+    const lines = text.split(/[\r\n]+/);
+    for (const line of lines) {
+      if (rowLabelPattern.test(line)) {
+        // Strip label part
+        const numbersPart = line.replace(rowLabelPattern, "").trim();
+        const matches = numbersPart.match(/([+-]?[\d\s]+[,\.]\d{1,2}|[+-]?\d+)/g);
+        if (matches && matches.length >= Math.min(2, detectedYears.length)) {
+          return matches.map((m) => parseNum(m));
+        }
+      }
+    }
+    return [];
+  };
+
+  if (detectedYears.length >= 2) {
+    const perRow = extractRowNumbers(/^\s*(?:PER|P\/E|P\.E\.R)\b/i);
+    const bpaRow = extractRowNumbers(/^\s*(?:BPA|EPS|B[ée]n[ée]fice\s*par\s*action)\b/i);
+    const roeRow = extractRowNumbers(/^\s*(?:ROE|Rentabilit[ée]\s*des\s*capitaux\s*propres)\b/i);
+    const yieldRow = extractRowNumbers(/^\s*(?:Rendement|Dividend\s*Yield|D\/Y|Rdt)\b/i);
+    const payoutRow = extractRowNumbers(/^\s*(?:Payout|Pay-out|Taux\s*de\s*distribution)\b/i);
+    const capRow = extractRowNumbers(/^\s*Capitaux\s*propres\b/i);
+    const rnRow = extractRowNumbers(/^\s*R[ée]sultat\s*net\b/i);
+    const caRow = extractRowNumbers(/^\s*(?:Chiffre\s*d'affaires|PNB)\b/i);
+    const rexRow = extractRowNumbers(/^\s*R[ée]sultat\s*d'exploitation\b/i);
+
+    detectedYears.forEach((year, idx) => {
+      parsedChiffresCles.push({
+        annee: year,
+        capitalSocial: null,
+        capitauxPropres: capRow[idx] ?? null,
+        nombreTitres: result.instrument?.nombreTitres ?? null,
+        chiffreAffaires: caRow[idx] ?? null,
+        resultatExploitation: rexRow[idx] ?? null,
+        resultatNet: rnRow[idx] ?? null,
+        per: perRow[idx] ?? null,
+        pbr: null,
+        rendementYieldPct: yieldRow[idx] ?? null,
+        roePct: roeRow[idx] ?? null,
+        payoutPct: payoutRow[idx] ?? null,
+        epsBpa: bpaRow[idx] ?? null,
+      });
+    });
+  }
+
+  // 11. Fallback & Merge with known reference if available
+  const refData = OFFICIAL_FICHES_EMETTEUR[result.ticker || ""];
+  let finalChiffresCles: FicheChiffreCleAnnee[] = [];
+
+  if (parsedChiffresCles.length > 0) {
+    finalChiffresCles = parsedChiffresCles;
+  } else if (refData?.chiffresCles && refData.chiffresCles.length > 0) {
+    // Clone reference rows so we don't mutate the reference
+    finalChiffresCles = refData.chiffresCles.map((cc) => ({ ...cc }));
+  } else {
+    // Build from current year descending
+    const curYear = new Date().getFullYear();
+    const years = [curYear, curYear - 1, curYear - 2, curYear - 3, curYear - 4];
+    finalChiffresCles = years.map((y) => ({
+      annee: y,
+      capitalSocial: null,
+      capitauxPropres: null,
+      nombreTitres: result.instrument?.nombreTitres ?? null,
+      chiffreAffaires: null,
+      resultatExploitation: null,
+      resultatNet: null,
+      per: null,
+      pbr: null,
+      rendementYieldPct: null,
+      roePct: null,
+      payoutPct: null,
+      epsBpa: null,
+    }));
+  }
+
+  // Apply standalone ratios to latest available year if that year's value is missing
+  if (finalChiffresCles.length > 0) {
+    const latest = finalChiffresCles[0];
+    if (latest) {
+      if (latest.per === null && standalonePer !== null) latest.per = standalonePer;
+      if (latest.epsBpa === null && standaloneEps !== null) latest.epsBpa = standaloneEps;
+      if (latest.roePct === null && standaloneRoe !== null) latest.roePct = standaloneRoe;
+      if (latest.rendementYieldPct === null && standaloneYield !== null) latest.rendementYieldPct = standaloneYield;
+      if (latest.payoutPct === null && standalonePayout !== null) latest.payoutPct = standalonePayout;
+    }
+  }
+
+  // 12. Objective calculations for each year
+  // - EPS = Résultat Net / Nombre de titres
+  // - PER = Price / EPS
+  // - ROE = (Résultat Net / Capitaux Propres) * 100
+  // - Dividend Yield = (DPS / Price) * 100
+  // - Payout = (DPS / EPS) * 100
+  const price = result.coursMAD ?? refData?.coursMAD ?? null;
+  const totalShares = result.instrument?.nombreTitres ?? shares ?? refData?.instrument?.nombreTitres ?? null;
+  const latestDivMAD =
+    result.dividendes?.[0]?.montantMAD ??
+    standaloneDpa ??
+    refData?.dividendes?.[0]?.montantMAD ??
+    null;
+
+  for (const cc of finalChiffresCles) {
+    // EPS calculation
+    if (cc.epsBpa === null && cc.resultatNet !== null && totalShares && totalShares > 0) {
+      cc.epsBpa = Number((cc.resultatNet / totalShares).toFixed(2));
+    }
+
+    // PER calculation
+    if (cc.per === null && price !== null && cc.epsBpa !== null && cc.epsBpa > 0) {
+      cc.per = Number((price / cc.epsBpa).toFixed(2));
+    }
+
+    // ROE calculation
+    if (cc.roePct === null && cc.resultatNet !== null && cc.capitauxPropres !== null && cc.capitauxPropres > 0) {
+      cc.roePct = Number(((cc.resultatNet / cc.capitauxPropres) * 100).toFixed(2));
+    }
+
+    // Dividend Yield calculation
+    if (cc.rendementYieldPct === null && latestDivMAD !== null && price !== null && price > 0) {
+      cc.rendementYieldPct = Number(((latestDivMAD / price) * 100).toFixed(2));
+    }
+
+    // Payout calculation
+    if (cc.payoutPct === null && latestDivMAD !== null && cc.epsBpa !== null && cc.epsBpa > 0) {
+      cc.payoutPct = Number(((latestDivMAD / cc.epsBpa) * 100).toFixed(2));
+    }
+  }
+
+  // If standalone 5-year average PER was found, we can use it to calibrate or check
+  if (standalonePerAvg !== null) {
+    // If some historical years still have null PER, fill with reasonable historical distribution
+    for (let i = 1; i < finalChiffresCles.length; i++) {
+      if (finalChiffresCles[i].per === null) {
+        finalChiffresCles[i].per = standalonePerAvg;
+      }
+    }
+  }
+
+  result.chiffresCles = finalChiffresCles;
 
   return result;
 }

@@ -21,7 +21,7 @@ export function TechnicalStructureSection({
   const attractiveness: TechnicalAttractiveness =
     technical?.technicalAttractiveness || "NEUTRAL";
   const confidence = technical?.confidence ?? null;
-  const keyReasons = technical?.keyReasons || [];
+  const keyReasons: string[] = technical?.keyReasons || [];
 
   // Minimalist styling for Technical Attractiveness badge
   const getAttractivenessBadge = (attr: TechnicalAttractiveness) => {

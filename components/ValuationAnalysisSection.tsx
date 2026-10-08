@@ -68,7 +68,7 @@ export function ValuationAnalysisSection({
     return `${val.toFixed(2)}%`;
   };
 
-  const keyReasons = valuation?.keyReasons || [];
+  const keyReasons: string[] = valuation?.keyReasons || [];
 
   return (
     <div className="pt-6 border-t border-zinc-100">

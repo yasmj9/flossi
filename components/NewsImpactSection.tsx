@@ -18,7 +18,7 @@ export function NewsImpactSection({
 
   const impact: NewsImpact = newsImpact?.newsImpact || (hasNews ? "NEUTRAL" : "NEUTRAL");
   const confidence = newsImpact?.confidence ?? null;
-  const keyReasons = newsImpact?.keyReasons || [];
+  const keyReasons: string[] = newsImpact?.keyReasons || [];
 
   // Minimalist styling for News Impact badge
   const getImpactBadge = (val: NewsImpact) => {
