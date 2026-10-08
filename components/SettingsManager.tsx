@@ -12,13 +12,12 @@ import {
   ShieldCheck,
   Zap,
   HelpCircle,
-  Database,
   Cpu,
-  BarChart3,
+  Globe,
 } from "lucide-react";
 
 export interface ProviderStatus {
-  provider: "drahmi" | "omkar" | "jev";
+  provider: "parsebot" | "jev";
   displayName: string;
   isConfigured: boolean;
   maskedKey: string | null;
@@ -34,14 +33,14 @@ interface MessageState {
 }
 
 interface ProviderCardProps {
-  provider: "drahmi" | "omkar" | "jev";
+  provider: "parsebot" | "jev";
   title: string;
   roleDescription: string;
   purposeNote: string;
   icon: React.ReactNode;
   status: ProviderStatus | undefined;
   onRefreshStatus: () => Promise<void>;
-  onStatusChange?: (provider: "drahmi" | "omkar" | "jev", isConfigured: boolean) => void;
+  onStatusChange?: (provider: "parsebot" | "jev", isConfigured: boolean) => void;
 }
 
 function ProviderCard({
@@ -397,11 +396,10 @@ function ProviderCard({
 export function SettingsManager({
   onStatusUpdate,
 }: {
-  onStatusUpdate?: (drahmi: boolean, omkar: boolean, jev: boolean) => void;
+  onStatusUpdate?: (parsebot: boolean, jev: boolean) => void;
 }) {
   const [statuses, setStatuses] = useState<{
-    drahmi?: ProviderStatus;
-    omkar?: ProviderStatus;
+    parsebot?: ProviderStatus;
     jev?: ProviderStatus;
   }>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -415,8 +413,7 @@ export function SettingsManager({
         setStatuses(json.data);
         if (onStatusUpdate) {
           onStatusUpdate(
-            !!json.data.drahmi?.isConfigured,
-            !!json.data.omkar?.isConfigured,
+            !!json.data.parsebot?.isConfigured,
             !!json.data.jev?.isConfigured
           );
         }
@@ -441,8 +438,7 @@ export function SettingsManager({
         if (json.success && json.data) {
           setStatuses(json.data);
           onStatusUpdate?.(
-            !!json.data.drahmi?.isConfigured,
-            !!json.data.omkar?.isConfigured,
+            !!json.data.parsebot?.isConfigured,
             !!json.data.jev?.isConfigured
           );
         } else {
@@ -499,25 +495,14 @@ export function SettingsManager({
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Drahmi API Section */}
+          {/* Parse.bot API Section */}
           <ProviderCard
-            provider="drahmi"
-            title="Drahmi API"
-            roleDescription="Dedicated Casablanca Stock Exchange API provider for Moroccan quotes, fundamentals, dividends, and technical intelligence."
-            purposeNote="Used for Bourse de Casablanca stocks. Get an API key at https://drahmi.app/api."
-            icon={<BarChart3 className="w-5 h-5 text-zinc-800" />}
-            status={statuses.drahmi}
-            onRefreshStatus={fetchStatuses}
-          />
-
-          {/* Omkar Cloud Section */}
-          <ProviderCard
-            provider="omkar"
-            title="Omkar Cloud"
-            roleDescription="Secondary data provider for financial reports, ratios, dividends, and news."
-            purposeNote="Optional provider for financial data. Stored keys are never displayed in full."
-            icon={<Database className="w-5 h-5 text-zinc-800" />}
-            status={statuses.omkar}
+            provider="parsebot"
+            title="Parse.bot API"
+            roleDescription="Primary web API engine for fetching stock quotes, financial reports, indicators, and news."
+            purposeNote="Used for extracting stock market data. Get an API key at https://parse.bot."
+            icon={<Globe className="w-5 h-5 text-zinc-800" />}
+            status={statuses.parsebot}
             onRefreshStatus={fetchStatuses}
           />
 

@@ -116,9 +116,9 @@ export function CompanySearch() {
           <div className="flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <strong className="font-semibold block">Drahmi API key is not configured</strong>
+              <strong className="font-semibold block">Parse.bot API key is not configured</strong>
               <span>
-                You can browse Casablanca Stock Exchange companies, but real-time quotes and AI analysis require a Drahmi API key.
+                You can browse Casablanca Stock Exchange companies, but real-time quotes and AI analysis require a Parse.bot API key.
               </span>
             </div>
           </div>

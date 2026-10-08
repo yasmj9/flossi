@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-export type Provider = "drahmi" | "omkar" | "jev";
+export type Provider = "parsebot" | "jev";
 
 export interface ProviderStatus {
   provider: Provider;
@@ -85,10 +85,8 @@ export async function getApiKey(provider: Provider): Promise<string | null> {
   }
 
   // Fallback to environment variables if provided
-  if (provider === "drahmi") {
-    return process.env.DRAHMI_API_KEY?.trim() || null;
-  } else if (provider === "omkar") {
-    return process.env.OMKAR_API_KEY?.trim() || null;
+  if (provider === "parsebot") {
+    return process.env.PARSE_API_KEY?.trim() || null;
   } else if (provider === "jev") {
     return process.env.JEV_API_KEY?.trim() || null;
   }
@@ -104,25 +102,14 @@ export async function getApiKeysStatus(): Promise<Record<Provider, ProviderStatu
   const storage = await readStorage();
 
   const providers: { id: Provider; displayName: string; envFallback: string | undefined }[] = [
-    { id: "drahmi", displayName: "Drahmi API", envFallback: process.env.DRAHMI_API_KEY },
-    { id: "omkar", displayName: "Omkar Cloud", envFallback: process.env.OMKAR_API_KEY },
+    { id: "parsebot", displayName: "Parse.bot API", envFallback: process.env.PARSE_API_KEY },
     { id: "jev", displayName: "JEV AI", envFallback: process.env.JEV_API_KEY },
   ];
 
   const result: Record<Provider, ProviderStatus> = {
-    drahmi: {
-      provider: "drahmi",
-      displayName: "Drahmi API",
-      isConfigured: false,
-      maskedKey: null,
-      configuredAt: null,
-      lastTestedAt: null,
-      lastTestSuccess: null,
-      lastTestMessage: null,
-    },
-    omkar: {
-      provider: "omkar",
-      displayName: "Omkar Cloud",
+    parsebot: {
+      provider: "parsebot",
+      displayName: "Parse.bot API",
       isConfigured: false,
       maskedKey: null,
       configuredAt: null,
@@ -256,10 +243,10 @@ export async function testProviderConnection(
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
-    if (provider === "drahmi") {
-      // Drahmi live API test:
-      // Calls Drahmi API market status endpoint which validates the X-API-Key header.
-      const res = await fetch("https://api.drahmi.app/api/v1/market/status", {
+    if (provider === "parsebot") {
+      // Parse.bot live API test:
+      // Calls Parse.bot marketplace search endpoint which validates X-API-Key
+      const res = await fetch("https://api.parse.bot/marketplace/apis?q=stock", {
         method: "GET",
         headers: {
           "X-API-Key": activeKey,
@@ -278,11 +265,11 @@ export async function testProviderConnection(
       }
 
       if (res.ok) {
-        await updateTestStatus(provider, true, "Connection successful. Drahmi API validated the key.");
+        await updateTestStatus(provider, true, "Connection successful. Parse.bot API validated the key.");
         return {
           success: true,
           statusCode: res.status,
-          message: "Connection successful. Drahmi API accepted and validated the API key.",
+          message: "Connection successful. Parse.bot accepted and validated the API key.",
         };
       }
 
@@ -295,57 +282,9 @@ export async function testProviderConnection(
       let failureReason = `Connection failed (${res.status}): ${errMsg || "Authentication error"}`;
 
       if (res.status === 401) {
-        failureReason = `Invalid API key (401): ${errMsg || "Drahmi rejected the key as unauthorized. Get a key at https://drahmi.app/api"}`;
+        failureReason = `Invalid API key (401): ${errMsg || "Parse.bot rejected the key as unauthorized. Get a key at https://parse.bot"}`;
       } else if (res.status === 403) {
-        failureReason = `Access forbidden (403): ${errMsg || "Drahmi access forbidden."}`;
-      }
-
-      await updateTestStatus(provider, false, failureReason);
-      return {
-        success: false,
-        statusCode: res.status,
-        message: failureReason,
-      };
-    } else if (provider === "omkar") {
-      // Omkar Cloud live API test:
-      // Uses the real Omkar Cloud price endpoint which validates the API-Key header.
-      const res = await fetch("https://gold-price-api.omkar.cloud/price", {
-        method: "GET",
-        headers: {
-          "API-Key": activeKey,
-          Accept: "application/json",
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      let data: Record<string, unknown> | null = null;
-      try {
-        data = (await res.json()) as Record<string, unknown>;
-      } catch {
-        // Response was not JSON
-      }
-
-      if (res.ok) {
-        await updateTestStatus(provider, true, "Connection successful. Omkar Cloud validated the key.");
-        return {
-          success: true,
-          statusCode: res.status,
-          message: "Connection successful. Omkar Cloud accepted and validated the API key.",
-        };
-      }
-
-      // Check specific error messages returned by Omkar Cloud
-      const errMsg = (data?.message as string) || (data?.error as string) || res.statusText;
-      let failureReason = `Connection failed (${res.status}): ${errMsg}`;
-
-      if (res.status === 400 && errMsg?.toLowerCase().includes("invalid api key")) {
-        failureReason = "Invalid API key: Omkar Cloud rejected the key as invalid.";
-      } else if (res.status === 400 && errMsg?.toLowerCase().includes("authentication requires")) {
-        failureReason = "Authentication failed: Omkar Cloud requires a valid API-Key header.";
-      } else if (res.status === 401 || res.status === 403) {
-        failureReason = `Authentication failed: ${errMsg}`;
+        failureReason = `Access forbidden (403): ${errMsg || "Parse.bot access forbidden."}`;
       }
 
       await updateTestStatus(provider, false, failureReason);

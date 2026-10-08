@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCseCompany } from "@/lib/cse-companies";
-import { fetchFullCompanyDataFromDrahmi } from "@/lib/drahmi-client";
-import { fetchFullCompanyDataFromOmkar } from "@/lib/omkar-client";
+import { fetchFullCompanyDataFromParseBot } from "@/lib/parsebot-client";
 import { analyzeWithJev } from "@/lib/jev-client";
 import { getApiKey } from "@/lib/api-keys";
 
@@ -31,15 +30,14 @@ export async function POST(
     }
 
     // Check configuration
-    const drahmiKey = await getApiKey("drahmi");
-    const omkarKey = await getApiKey("omkar");
+    const parsebotKey = await getApiKey("parsebot");
 
-    if (!drahmiKey && !omkarKey) {
+    if (!parsebotKey) {
       return NextResponse.json({
         success: false,
-        status: "drahmi_not_configured",
+        status: "parsebot_not_configured",
         company,
-        error: "Drahmi API key is not configured. Configure it in Settings to fetch Casablanca Stock Exchange data.",
+        error: "Parse.bot API key is not configured. Configure it in Settings to fetch stock & financial data.",
       });
     }
 
@@ -53,27 +51,15 @@ export async function POST(
       });
     }
 
-    // Step 1 - 5: Fetch company, price, financials, news and normalize
-    // Drahmi is the dedicated Moroccan stock market API
-    let companyData;
-    if (drahmiKey) {
-      companyData = await fetchFullCompanyDataFromDrahmi(company.ticker);
-    } else {
-      companyData = await fetchFullCompanyDataFromOmkar(company.ticker);
-    }
+    // Step 1 - 5: Fetch company, price, financials, news via Parse.bot API and normalize
+    const companyData = await fetchFullCompanyDataFromParseBot(company.ticker);
 
     if (companyData.status === "api_error") {
-      // If Omkar failed with ticker errors, give user direct recommendation to use Drahmi
-      const isOmkarTickerError = !drahmiKey && (companyData.error?.includes("symbol") || companyData.error?.includes("ticker") || companyData.error?.includes("400"));
-      const userError = isOmkarTickerError
-        ? "Omkar Cloud does not support Casablanca Stock Exchange tickers. Please configure Drahmi API in Settings."
-        : companyData.error || "Failed to fetch company data.";
-
       return NextResponse.json({
         success: false,
         status: "api_error",
         company,
-        error: userError,
+        error: companyData.error || "Failed to fetch company data via Parse.bot API.",
       });
     }
 

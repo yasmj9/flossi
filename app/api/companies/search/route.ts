@@ -7,15 +7,14 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q") || "";
 
-    const drahmiKey = await getApiKey("drahmi");
-    const omkarKey = await getApiKey("omkar");
+    const parsebotKey = await getApiKey("parsebot");
     const results = searchCseCompanies(query);
 
     return NextResponse.json({
       success: true,
       query,
-      apiKeyConfigured: !!(drahmiKey || omkarKey),
-      drahmiConfigured: !!drahmiKey,
+      apiKeyConfigured: !!parsebotKey,
+      parsebotConfigured: !!parsebotKey,
       total: results.length,
       companies: results,
     });

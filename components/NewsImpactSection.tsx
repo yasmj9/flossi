@@ -1,7 +1,7 @@
 import React from "react";
 import { ExternalLink, Newspaper } from "lucide-react";
 import { JevNewsImpactResult, NewsImpact } from "@/lib/jev-client";
-import { CompanyNewsItem } from "@/lib/omkar-client";
+import { CompanyNewsItem } from "@/lib/parsebot-client";
 
 interface NewsImpactSectionProps {
   newsImpact?: JevNewsImpactResult | null;
@@ -134,7 +134,7 @@ export function NewsImpactSection({
             Recent Relevant News ({displayItems.length})
           </h3>
           <span className="text-[11px] text-zinc-400 font-mono">
-            Omkar Cloud Feed
+            Parse.bot API Feed
           </span>
         </div>
 

@@ -14,7 +14,7 @@ import {
   Building2,
 } from "lucide-react";
 import { CseCompany } from "@/lib/cse-companies";
-import { NormalizedJevInput } from "@/lib/omkar-client";
+import { NormalizedJevInput, CompanyNewsItem } from "@/lib/parsebot-client";
 import { FiveYearIndicators } from "@/lib/indicators";
 import { FiveYearIndicatorsTable } from "./FiveYearIndicatorsTable";
 import { FinancialStatementsData } from "@/lib/financial-statements";
@@ -33,7 +33,6 @@ import { TechnicalStructureSection } from "./TechnicalStructureSection";
 import { TechnicalStructureData } from "@/lib/technical-structure";
 import { NewsImpactSection } from "./NewsImpactSection";
 import { EntryPointsSection } from "./EntryPointsSection";
-import { CompanyNewsItem } from "@/lib/omkar-client";
 
 interface CompanyOverviewProps {
   ticker: string;
@@ -43,8 +42,7 @@ interface AnalysisResponse {
   success: boolean;
   status:
     | "success"
-    | "drahmi_not_configured"
-    | "omkar_not_configured"
+    | "parsebot_not_configured"
     | "jev_not_configured"
     | "api_error"
     | "company_data_unavailable"
@@ -173,7 +171,7 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
             Analyzing {ticker.toUpperCase()}...
           </div>
           <p className="text-xs text-zinc-500 max-w-sm">
-            Retrieving stock & financial data from Drahmi API and consulting JEV AI decision engine.
+            Retrieving stock & financial data from Parse.bot API and consulting JEV AI decision engine.
           </p>
         </div>
       </div>
@@ -184,8 +182,7 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
   if (
     data?.status === "unsupported_company" ||
     (!data?.company &&
-      data?.status !== "drahmi_not_configured" &&
-      data?.status !== "omkar_not_configured" &&
+      data?.status !== "parsebot_not_configured" &&
       data?.status !== "jev_not_configured")
   ) {
     return (
@@ -219,8 +216,7 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
   }
 
   const company = data.company!;
-  const isDrahmiNotConfigured = data.status === "drahmi_not_configured";
-  const isOmkarNotConfigured = data.status === "omkar_not_configured";
+  const isParsebotNotConfigured = data.status === "parsebot_not_configured";
   const isJevNotConfigured = data.status === "jev_not_configured";
   const isJevError = data.status === "jev_error";
   const isApiError = data.status === "api_error" || data.status === "company_data_unavailable";
@@ -277,14 +273,14 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
         </div>
 
         {/* 3. Provider Configuration Alerts */}
-        {(isDrahmiNotConfigured || isOmkarNotConfigured) && (
+        {isParsebotNotConfigured && (
           <div className="my-6 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <strong className="font-semibold block">Drahmi API key is not configured</strong>
+                <strong className="font-semibold block">Parse.bot API key is not configured</strong>
                 <span>
-                  Configure your Drahmi API key in Settings to retrieve real-time Casablanca Stock Exchange prices, financial reports, indicators, and news.
+                  Configure your Parse.bot API key in Settings to retrieve stock market prices, financial reports, indicators, and news.
                 </span>
               </div>
             </div>

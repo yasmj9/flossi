@@ -3,7 +3,7 @@ import { SettingsManager } from "@/components/SettingsManager";
 
 export const metadata: Metadata = {
   title: "Settings & API Keys — Flossi",
-  description: "Configure Omkar Cloud and JEV AI API keys for Casablanca Stock Exchange analysis.",
+  description: "Configure Parse.bot API and JEV AI API keys for Casablanca Stock Exchange analysis.",
 };
 
 export default function SettingsPage() {

@@ -10,7 +10,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Database,
+  Globe,
   Cpu,
 } from "lucide-react";
 
@@ -22,7 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [omkarConfigured, setOmkarConfigured] = useState(false);
+  const [parsebotConfigured, setParsebotConfigured] = useState(false);
   const [jevConfigured, setJevConfigured] = useState(false);
 
   // Fetch API keys status for the sidebar indicators
@@ -34,7 +34,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         const json = await res.json();
         if (ignore) return;
         if (json.success && json.data) {
-          setOmkarConfigured(!!json.data.omkar?.isConfigured);
+          setParsebotConfigured(!!json.data.parsebot?.isConfigured);
           setJevConfigured(!!json.data.jev?.isConfigured);
         }
       } catch {
@@ -149,20 +149,20 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
           <div className="flex items-center justify-between text-xs py-1">
             <span className="flex items-center gap-1.5 text-zinc-700">
-              <Database className="w-3.5 h-3.5 text-zinc-500" />
-              Omkar Cloud
+              <Globe className="w-3.5 h-3.5 text-zinc-500" />
+              Parse.bot API
             </span>
             <span
               className={`inline-flex items-center gap-1 text-[11px] font-medium ${
-                omkarConfigured ? "text-emerald-700" : "text-zinc-600"
+                parsebotConfigured ? "text-emerald-700" : "text-zinc-600"
               }`}
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  omkarConfigured ? "bg-emerald-500" : "bg-zinc-300"
+                  parsebotConfigured ? "bg-emerald-500" : "bg-zinc-300"
                 }`}
               />
-              {omkarConfigured ? "Ready" : "Unset"}
+              {parsebotConfigured ? "Ready" : "Unset"}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs py-1">
@@ -246,20 +246,20 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-700 flex items-center gap-1.5">
-                <Database className="w-3 h-3 text-zinc-500" />
-                Omkar Cloud
+                <Globe className="w-3 h-3 text-zinc-500" />
+                Parse.bot API
               </span>
               <span
                 className={`inline-flex items-center gap-1 text-[11px] font-medium ${
-                  omkarConfigured ? "text-emerald-700" : "text-zinc-600"
+                  parsebotConfigured ? "text-emerald-700" : "text-zinc-600"
                 }`}
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
-                    omkarConfigured ? "bg-emerald-500" : "bg-zinc-300"
+                    parsebotConfigured ? "bg-emerald-500" : "bg-zinc-300"
                   }`}
                 />
-                {omkarConfigured ? "Configured" : "Unset"}
+                {parsebotConfigured ? "Configured" : "Unset"}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
@@ -284,8 +284,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         ) : (
           <div className="p-3 border-t border-zinc-200 flex flex-col items-center gap-2">
             <span
-              className={`w-2 h-2 rounded-full ${omkarConfigured ? "bg-emerald-500" : "bg-zinc-300"}`}
-              title={`Omkar Cloud: ${omkarConfigured ? "Configured" : "Not configured"}`}
+              className={`w-2 h-2 rounded-full ${parsebotConfigured ? "bg-emerald-500" : "bg-zinc-300"}`}
+              title={`Parse.bot API: ${parsebotConfigured ? "Configured" : "Not configured"}`}
             />
             <span
               className={`w-2 h-2 rounded-full ${jevConfigured ? "bg-emerald-500" : "bg-zinc-300"}`}

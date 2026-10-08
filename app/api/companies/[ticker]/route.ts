@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCseCompany } from "@/lib/cse-companies";
-import { fetchCompanyFromDrahmi } from "@/lib/drahmi-client";
-import { fetchCompanyFromOmkar } from "@/lib/omkar-client";
+import { fetchCompanyFromParseBot } from "@/lib/parsebot-client";
 import { getApiKey } from "@/lib/api-keys";
 
 export async function GET(
@@ -29,22 +28,19 @@ export async function GET(
       );
     }
 
-    const drahmiKey = await getApiKey("drahmi");
-    const omkarKey = await getApiKey("omkar");
+    const parsebotKey = await getApiKey("parsebot");
 
-    if (!drahmiKey && !omkarKey) {
+    if (!parsebotKey) {
       return NextResponse.json({
         success: true,
         status: "api_key_not_configured",
         company,
         quote: null,
-        error: "Drahmi API key is not configured. Configure it in Settings to fetch real-time market data.",
+        error: "Parse.bot API key is not configured. Configure it in Settings to fetch real-time market data.",
       });
     }
 
-    const result = drahmiKey
-      ? await fetchCompanyFromDrahmi(company.ticker)
-      : await fetchCompanyFromOmkar(company.ticker);
+    const result = await fetchCompanyFromParseBot(company.ticker);
 
     return NextResponse.json({
       success: result.status === "success",

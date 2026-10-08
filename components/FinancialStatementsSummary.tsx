@@ -33,7 +33,7 @@ export function FinancialStatementsSummary({
           </p>
         </div>
         <div className="p-4 border border-zinc-200 rounded-xl bg-zinc-50/50 text-xs text-zinc-500">
-          Financial statements data is currently unavailable from Omkar Cloud for this company. Missing values are not fabricated.
+          Financial statements data is currently unavailable from Parse.bot API for this company. Missing values are not fabricated.
         </div>
       </div>
     );

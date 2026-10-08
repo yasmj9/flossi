@@ -29,7 +29,7 @@ export function FiveYearIndicatorsTable({
           </p>
         </div>
         <div className="p-4 border border-zinc-200 rounded-xl bg-zinc-50/50 text-xs text-zinc-500">
-          Historical multi-year financial statements are currently unavailable from Omkar Cloud for this company. Missing values are not fabricated.
+          Historical multi-year financial statements are currently unavailable from Parse.bot API for this company. Missing values are not fabricated.
         </div>
       </div>
     );
