@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCseCompany } from "@/lib/cse-companies";
 import { parseFicheEmetteurText, FicheEmetteurData, saveFicheEmetteur } from "@/lib/fiche-emetteur";
-import { PDFParse } from "pdf-parse";
+import { extractTextFromPdfBuffer } from "@/lib/pdf-extractor";
 
 export async function POST(
   req: NextRequest,
@@ -41,10 +41,7 @@ export async function POST(
       const buffer = Buffer.from(arrayBuffer);
 
       try {
-        const parser = new PDFParse({ data: buffer });
-        const textResult = await parser.getText();
-        extractedText = typeof textResult === "string" ? textResult : (textResult as { text?: string })?.text || "";
-        await parser.destroy();
+        extractedText = await extractTextFromPdfBuffer(buffer);
       } catch (pdfErr: unknown) {
         return NextResponse.json(
           { success: false, error: `Failed to parse PDF: ${(pdfErr as Error).message || "Invalid PDF"}` },

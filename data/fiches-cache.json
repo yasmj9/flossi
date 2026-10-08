@@ -1,26 +1,22 @@
 {
   "ATW": {
     "ticker": "ATW",
-    "nomSociete": "ATTIJARIWAFA BANK",
+    "nomSociete": "Attijariwafa Bank",
     "dateDonnees": "08/10/2026",
     "coursMAD": 670.2,
-    "variationPct": -0.45,
+    "variationPct": null,
     "sourceUrl": "https://www.casablanca-bourse.com/live-market/actions/fiche/ATW",
     "instrument": {
       "isin": "MA0000012445",
       "ticker": "ATW",
       "marche": "Principal A",
-      "secteur": "Banques",
+      "secteur": "Banking",
       "nombreTitres": 215140839,
       "valeurNominale": 10,
       "capitalisationMAD": 144187390297.80002
     },
     "societe": {
-      "nom": "ATTIJARIWAFA BANK",
-      "siege": "2. Bd Moulay Youssef BP: 11141 - Casablanca 20 000.",
-      "auditeur": "Deloitte Audit et Mazars Audit et Conseil",
-      "constitution": "01/01/1911",
-      "introduction": "13/08/1943"
+      "nom": "Attijariwafa Bank"
     },
     "dirigeants": [
       {
@@ -28,7 +24,7 @@
         "nom": "Mohamed EL KETTANI"
       },
       {
-        "poste": "Directeur Général délégué (Banque de détail & filiales)",
+        "poste": "Directeur Général délégué",
         "nom": "Ismail DOUIRI"
       },
       {
@@ -36,7 +32,6 @@
         "nom": "Rachid KETTANI"
       }
     ],
-    "dateActionnariat": "30/06/2026",
     "actionnaires": [
       {
         "declarant": "AL MADA",
@@ -192,26 +187,6 @@
         "montantMAD": 6.75,
         "type": "Exceptionnel",
         "dateDetachement": "05/01/2021"
-      }
-    ],
-    "relationsInvestisseurs": {
-      "responsable": "Ibtissam ABOUHARIA",
-      "courriel": "i.abouharia@attijariwafa.com",
-      "telephone": "(212) 022 22 41 69 / 022 29 88 88",
-      "siteWeb": "www.attijariwafabank.com"
-    },
-    "augmentationsCapital": [
-      {
-        "date": "31/08/2021",
-        "nature": "Conversion des dividendes en actions",
-        "variationTitres": 1967852,
-        "valeurNominale": 10
-      },
-      {
-        "date": "03/03/2021",
-        "nature": "Conversion des dividendes en actions",
-        "variationTitres": 3313308,
-        "valeurNominale": 10
       }
     ]
   }

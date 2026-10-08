@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PDFParse } from "pdf-parse";
+import { extractTextFromPdfBuffer } from "@/lib/pdf-extractor";
 import { getCseCompany, CSE_COMPANIES } from "@/lib/cse-companies";
 import {
   parseFicheEmetteurText,
@@ -55,13 +55,7 @@ export async function POST(req: NextRequest) {
 
     let extractedText = "";
     try {
-      const parser = new PDFParse({ data: buffer });
-      const textResult = await parser.getText();
-      extractedText =
-        typeof textResult === "string"
-          ? textResult
-          : (textResult as { text?: string })?.text || "";
-      await parser.destroy();
+      extractedText = await extractTextFromPdfBuffer(buffer);
     } catch (parseErr: unknown) {
       return NextResponse.json(
         {
