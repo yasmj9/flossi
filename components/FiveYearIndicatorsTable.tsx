@@ -104,7 +104,7 @@ export function FiveYearIndicatorsTable({
             Five-Year Key Indicators
           </h2>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Factual historical ratios from Omkar Cloud across {totalYearsAvailable}{" "}
+            Factual historical ratios from Parse.bot API across {totalYearsAvailable}{" "}
             {totalYearsAvailable === 1 ? "fiscal year" : "available fiscal years"}.
           </p>
         </div>

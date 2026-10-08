@@ -4,15 +4,16 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Search,
   KeyRound,
   Menu,
   X,
   ChevronLeft,
   ChevronRight,
-  Globe,
   Cpu,
+  FileUp,
+  FileText,
 } from "lucide-react";
+import { ImportPdfModal } from "./ImportPdfModal";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -22,7 +23,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [parsebotConfigured, setParsebotConfigured] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [jevConfigured, setJevConfigured] = useState(false);
 
   // Fetch API keys status for the sidebar indicators
@@ -34,7 +35,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         const json = await res.json();
         if (ignore) return;
         if (json.success && json.data) {
-          setParsebotConfigured(!!json.data.parsebot?.isConfigured);
           setJevConfigured(!!json.data.jev?.isConfigured);
         }
       } catch {
@@ -61,9 +61,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navLinks = [
     {
       href: "/companies",
-      label: "Companies",
-      icon: Search,
-      exact: false,
+      label: "Import PDF",
+      icon: FileUp,
+      exact: true,
     },
     {
       href: "/settings",
@@ -145,24 +145,16 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Mobile Sidebar Footer with Provider Statuses */}
         <div className="p-4 border-t border-zinc-200 bg-zinc-50 space-y-2">
           <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-            Integrations
+            Data Source
           </div>
           <div className="flex items-center justify-between text-xs py-1">
             <span className="flex items-center gap-1.5 text-zinc-700">
-              <Globe className="w-3.5 h-3.5 text-zinc-500" />
-              Parse.bot API
+              <FileText className="w-3.5 h-3.5 text-zinc-500" />
+              Fiche Émetteur (PDF)
             </span>
-            <span
-              className={`inline-flex items-center gap-1 text-[11px] font-medium ${
-                parsebotConfigured ? "text-emerald-700" : "text-zinc-600"
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  parsebotConfigured ? "bg-emerald-500" : "bg-zinc-300"
-                }`}
-              />
-              {parsebotConfigured ? "Ready" : "Unset"}
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              PDF-First
             </span>
           </div>
           <div className="flex items-center justify-between text-xs py-1">
@@ -242,24 +234,16 @@ export function AppLayout({ children }: AppLayoutProps) {
         {!collapsed ? (
           <div className="p-4 border-t border-zinc-200 bg-zinc-50/50 space-y-2">
             <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
-              Data Providers
+              Data Pipeline
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-700 flex items-center gap-1.5">
-                <Globe className="w-3 h-3 text-zinc-500" />
-                Parse.bot API
+                <FileText className="w-3 h-3 text-zinc-500" />
+                Fiche Émetteur (PDF)
               </span>
-              <span
-                className={`inline-flex items-center gap-1 text-[11px] font-medium ${
-                  parsebotConfigured ? "text-emerald-700" : "text-zinc-600"
-                }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    parsebotConfigured ? "bg-emerald-500" : "bg-zinc-300"
-                  }`}
-                />
-                {parsebotConfigured ? "Configured" : "Unset"}
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                PDF-First
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
@@ -284,8 +268,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         ) : (
           <div className="p-3 border-t border-zinc-200 flex flex-col items-center gap-2">
             <span
-              className={`w-2 h-2 rounded-full ${parsebotConfigured ? "bg-emerald-500" : "bg-zinc-300"}`}
-              title={`Parse.bot API: ${parsebotConfigured ? "Configured" : "Not configured"}`}
+              className="w-2 h-2 rounded-full bg-emerald-500"
+              title="Fiche Émetteur: PDF-First"
             />
             <span
               className={`w-2 h-2 rounded-full ${jevConfigured ? "bg-emerald-500" : "bg-zinc-300"}`}
@@ -335,17 +319,34 @@ export function AppLayout({ children }: AppLayoutProps) {
             </span>
           </div>
 
-          <Link
-            href="/settings"
-            className="text-xs text-zinc-600 hover:text-zinc-900 flex items-center gap-1 font-medium"
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            Keys
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsImportModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 text-white text-xs font-semibold hover:bg-zinc-800 transition-colors"
+            >
+              <FileUp className="w-3.5 h-3.5" />
+              <span>Import PDF</span>
+            </button>
+
+            <Link
+              href="/settings"
+              className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-900"
+              title="Settings"
+            >
+              <KeyRound className="w-4 h-4" />
+            </Link>
+          </div>
         </header>
 
         {/* Page Content */}
         <div className="flex-1 bg-white">{children}</div>
+
+        {/* Global Import PDF Modal */}
+        <ImportPdfModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+        />
       </div>
     </div>
   );

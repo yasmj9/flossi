@@ -13,11 +13,11 @@ import {
   Zap,
   HelpCircle,
   Cpu,
-  Globe,
+  FileText,
 } from "lucide-react";
 
 export interface ProviderStatus {
-  provider: "parsebot" | "jev";
+  provider: "jev";
   displayName: string;
   isConfigured: boolean;
   maskedKey: string | null;
@@ -33,14 +33,14 @@ interface MessageState {
 }
 
 interface ProviderCardProps {
-  provider: "parsebot" | "jev";
+  provider: "jev";
   title: string;
   roleDescription: string;
   purposeNote: string;
   icon: React.ReactNode;
   status: ProviderStatus | undefined;
   onRefreshStatus: () => Promise<void>;
-  onStatusChange?: (provider: "parsebot" | "jev", isConfigured: boolean) => void;
+  onStatusChange?: (provider: "jev", isConfigured: boolean) => void;
 }
 
 function ProviderCard({
@@ -123,7 +123,6 @@ function ProviderCard({
   const handleTestConnection = async () => {
     setMessage(null);
 
-    // If input is empty and not configured, we cannot test
     const keyToTest = apiKeyInput.trim();
     if (!keyToTest && !isConfigured) {
       setMessage({
@@ -140,7 +139,7 @@ function ProviderCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider,
-          apiKey: keyToTest || undefined, // undefined will test the saved key
+          apiKey: keyToTest || undefined,
         }),
       });
 
@@ -396,10 +395,9 @@ function ProviderCard({
 export function SettingsManager({
   onStatusUpdate,
 }: {
-  onStatusUpdate?: (parsebot: boolean, jev: boolean) => void;
+  onStatusUpdate?: (jevConfigured: boolean) => void;
 }) {
   const [statuses, setStatuses] = useState<{
-    parsebot?: ProviderStatus;
     jev?: ProviderStatus;
   }>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -412,10 +410,7 @@ export function SettingsManager({
       if (json.success && json.data) {
         setStatuses(json.data);
         if (onStatusUpdate) {
-          onStatusUpdate(
-            !!json.data.parsebot?.isConfigured,
-            !!json.data.jev?.isConfigured
-          );
+          onStatusUpdate(!!json.data.jev?.isConfigured);
         }
       } else {
         setFetchError(json.error || "Failed to load API settings");
@@ -437,10 +432,7 @@ export function SettingsManager({
         if (ignore) return;
         if (json.success && json.data) {
           setStatuses(json.data);
-          onStatusUpdate?.(
-            !!json.data.parsebot?.isConfigured,
-            !!json.data.jev?.isConfigured
-          );
+          onStatusUpdate?.(!!json.data.jev?.isConfigured);
         } else {
           setFetchError(json.error || "Failed to load API settings");
         }
@@ -471,9 +463,15 @@ export function SettingsManager({
           <h1 className="text-2xl font-bold tracking-tight">API Key Settings</h1>
         </div>
         <p className="text-sm text-zinc-600 mt-1">
-          Configure the external service providers for Casablanca Stock Exchange data and AI investment decisions.
+          Configure external AI decision engine credentials. Stock quotes and financial reports are imported exclusively via official Casablanca Stock Exchange PDFs.
         </p>
-        <div className="mt-3 text-xs bg-zinc-50 border border-zinc-200 text-zinc-600 p-3 rounded-lg flex items-center gap-2">
+        <div className="mt-3 text-xs bg-emerald-50/80 border border-emerald-200 text-emerald-900 p-3 rounded-lg flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>
+            <strong>PDF-Only Stock Data:</strong> Stock prices, 5-year financials, balance sheets, and dividends are imported directly from Casablanca Stock Exchange Fiche Instrument PDFs without requiring external stock APIs. Configure JEV AI below for investment recommendations.
+          </span>
+        </div>
+        <div className="mt-2 text-xs bg-zinc-50 border border-zinc-200 text-zinc-600 p-3 rounded-lg flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-zinc-500 shrink-0" />
           <span>
             API keys are securely stored on the server, never hard-coded, and never re-displayed in full once saved.
@@ -495,23 +493,25 @@ export function SettingsManager({
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Parse.bot API Section */}
-          <ProviderCard
-            provider="parsebot"
-            title="Parse.bot API"
-            roleDescription="Primary web API engine for fetching stock quotes, financial reports, indicators, and news."
-            purposeNote="Used for extracting stock market data. Get an API key at https://parse.bot."
-            icon={<Globe className="w-5 h-5 text-zinc-800" />}
-            status={statuses.parsebot}
-            onRefreshStatus={fetchStatuses}
-          />
+          {/* Data Source Notice */}
+          <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50/60 flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-zinc-100 text-zinc-800 shrink-0">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-xs font-semibold text-zinc-900">Stock & Financial Data Source</h2>
+              <p className="text-xs text-zinc-600 mt-0.5 leading-relaxed">
+                Imported directly via official Casablanca Stock Exchange Fiche Instrument PDFs (&ldquo;Fiche Émetteur&rdquo; format). No external market data API or API key is required for stock quotes and financials.
+              </p>
+            </div>
+          </div>
 
           {/* JEV AI Section */}
           <ProviderCard
             provider="jev"
             title="JEV AI"
             roleDescription="Discriminative decision engine responsible for BUY / HOLD / SELL judgments, confidence, and scores."
-            purposeNote="Accepts clean structured JSON containing fundamental, technical, and news data."
+            purposeNote="Accepts clean structured JSON containing fundamental, technical, and dividend data extracted from uploaded PDFs."
             icon={<Cpu className="w-5 h-5 text-zinc-800" />}
             status={statuses.jev}
             onRefreshStatus={fetchStatuses}

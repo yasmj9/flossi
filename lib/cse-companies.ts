@@ -10,7 +10,7 @@ export interface CseCompany {
   currency: string; // "MAD"
   sector: string; // e.g. "Banking", "Telecommunications"
   isin?: string; // International Securities Identification Number
-  omkarSymbol?: string; // Symbol format for external providers (e.g. "ATW:CASABLANCA" or "ATW")
+  ficheUrl?: string; // Bourse de Casablanca fiche URL
 }
 
 export const CSE_COMPANIES: CseCompany[] = [
@@ -20,8 +20,8 @@ export const CSE_COMPANIES: CseCompany[] = [
     exchange: "Casablanca Stock Exchange",
     currency: "MAD",
     sector: "Banking",
-    isin: "MA0000011512",
-    omkarSymbol: "ATW:CASABLANCA",
+    isin: "MA0000012445",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/ATW",
   },
   {
     ticker: "BCP",
@@ -30,7 +30,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Banking",
     isin: "MA0000011884",
-    omkarSymbol: "BCP:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/BCP",
   },
   {
     ticker: "BOA",
@@ -39,7 +39,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Banking",
     isin: "MA0000010951",
-    omkarSymbol: "BOA:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/BOA",
   },
   {
     ticker: "IAM",
@@ -48,7 +48,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Telecommunications",
     isin: "MA0000011488",
-    omkarSymbol: "IAM:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/IAM",
   },
   {
     ticker: "LHM",
@@ -57,7 +57,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Building Materials",
     isin: "MA0000012320",
-    omkarSymbol: "LHM:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/LHM",
   },
   {
     ticker: "TQA",
@@ -66,7 +66,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Utilities & Energy",
     isin: "MA0000012205",
-    omkarSymbol: "TQA:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/TQA",
   },
   {
     ticker: "MSA",
@@ -75,7 +75,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Port Logistics & Transport",
     isin: "MA0000012296",
-    omkarSymbol: "MSA:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/MSA",
   },
   {
     ticker: "AKT",
@@ -84,7 +84,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Healthcare",
     isin: "MA0000012569",
-    omkarSymbol: "AKT:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/AKT",
   },
   {
     ticker: "CIH",
@@ -93,7 +93,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Banking",
     isin: "MA0000011454",
-    omkarSymbol: "CIH:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/CIH",
   },
   {
     ticker: "CDM",
@@ -102,7 +102,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Banking",
     isin: "MA0000010969",
-    omkarSymbol: "CDM:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/CDM",
   },
   {
     ticker: "CFG",
@@ -111,7 +111,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Banking",
     isin: "MA0000012585",
-    omkarSymbol: "CFG:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/CFG",
   },
   {
     ticker: "TGCC",
@@ -120,7 +120,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Construction & Engineering",
     isin: "MA0000012544",
-    omkarSymbol: "TGCC:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/TGCC",
   },
   {
     ticker: "ADH",
@@ -129,7 +129,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Real Estate Development",
     isin: "MA0000011504",
-    omkarSymbol: "ADH:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/ADH",
   },
   {
     ticker: "RDS",
@@ -138,7 +138,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Real Estate Development",
     isin: "MA0000012239",
-    omkarSymbol: "RDS:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/RDS",
   },
   {
     ticker: "ALM",
@@ -147,7 +147,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Real Estate Development",
     isin: "MA0000011702",
-    omkarSymbol: "ALM:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/ALM",
   },
   {
     ticker: "ARL",
@@ -156,7 +156,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Real Estate Investment",
     isin: "MA0000012486",
-    omkarSymbol: "ARL:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/ARL",
   },
   {
     ticker: "IMR",
@@ -165,7 +165,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Real Estate Investment",
     isin: "MA0000012353",
-    omkarSymbol: "IMR:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/IMR",
   },
   {
     ticker: "COS",
@@ -174,7 +174,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Agri-Food & Sugar",
     isin: "MA0000012247",
-    omkarSymbol: "COS:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/COS",
   },
   {
     ticker: "LES",
@@ -183,7 +183,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Agri-Food & Oils",
     isin: "MA0000012015",
-    omkarSymbol: "LES:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/LES",
   },
   {
     ticker: "MUT",
@@ -192,7 +192,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Consumer Goods",
     isin: "MA0000012387",
-    omkarSymbol: "MUT:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/MUT",
   },
   {
     ticker: "MNG",
@@ -201,7 +201,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Mining",
     isin: "MA0000011058",
-    omkarSymbol: "MNG:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/MNG",
   },
   {
     ticker: "SMI",
@@ -210,7 +210,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Mining",
     isin: "MA0000011041",
-    omkarSymbol: "SMI:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/SMI",
   },
   {
     ticker: "CMT",
@@ -219,7 +219,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Mining",
     isin: "MA0000011793",
-    omkarSymbol: "CMT:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/CMT",
   },
   {
     ticker: "HPS",
@@ -228,7 +228,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Fintech & IT",
     isin: "MA0000011579",
-    omkarSymbol: "HPS:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/HPS",
   },
   {
     ticker: "DIS",
@@ -237,7 +237,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "IT Distribution",
     isin: "MA0000011603",
-    omkarSymbol: "DIS:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/DIS",
   },
   {
     ticker: "MIC",
@@ -246,7 +246,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "IT Services",
     isin: "MA0000012148",
-    omkarSymbol: "MIC:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/MIC",
   },
   {
     ticker: "DWY",
@@ -255,7 +255,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "IT Hardware",
     isin: "MA0000012551",
-    omkarSymbol: "DWY:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/DWY",
   },
   {
     ticker: "SOT",
@@ -264,7 +264,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Pharmaceuticals",
     isin: "MA0000011462",
-    omkarSymbol: "SOT:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/SOT",
   },
   {
     ticker: "LAP",
@@ -273,7 +273,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Retail & Supermarkets",
     isin: "MA0000011751",
-    omkarSymbol: "LAP:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/LAP",
   },
   {
     ticker: "WAA",
@@ -282,7 +282,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Insurance",
     isin: "MA0000010928",
-    omkarSymbol: "WAA:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/WAA",
   },
   {
     ticker: "SML",
@@ -291,7 +291,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Insurance",
     isin: "MA0000010936",
-    omkarSymbol: "SML:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/SML",
   },
   {
     ticker: "ATL",
@@ -300,7 +300,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Insurance",
     isin: "MA0000011686",
-    omkarSymbol: "ATL:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/ATL",
   },
   {
     ticker: "CMA",
@@ -309,7 +309,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Building Materials",
     isin: "MA0000010993",
-    omkarSymbol: "CMA:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/CMA",
   },
   {
     ticker: "COL",
@@ -318,7 +318,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Building Materials & Paints",
     isin: "MA0000011538",
-    omkarSymbol: "COL:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/COL",
   },
   {
     ticker: "SID",
@@ -327,7 +327,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Steel & Metallurgy",
     isin: "MA0000010019",
-    omkarSymbol: "SID:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/SID",
   },
   {
     ticker: "AFM",
@@ -336,7 +336,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Oil & Gas Distribution",
     isin: "MA0000010944",
-    omkarSymbol: "AFM:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/AFM",
   },
   {
     ticker: "TMR",
@@ -345,7 +345,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Oil & Gas Distribution",
     isin: "MA0000012270",
-    omkarSymbol: "TMR:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/TMR",
   },
   {
     ticker: "SNP",
@@ -354,7 +354,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Chemicals",
     isin: "MA0000011652",
-    omkarSymbol: "SNP:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/SNP",
   },
   {
     ticker: "ATH",
@@ -363,7 +363,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Automotive Distribution",
     isin: "MA0000010266",
-    omkarSymbol: "ATH:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/ATH",
   },
   {
     ticker: "ENK",
@@ -372,7 +372,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Automotive Distribution",
     isin: "TN0007420015",
-    omkarSymbol: "ENK:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/ENK",
   },
   {
     ticker: "SBM",
@@ -381,7 +381,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Beverages",
     isin: "MA0000010068",
-    omkarSymbol: "SBM:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/SBM",
   },
   {
     ticker: "DHO",
@@ -390,7 +390,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Diversified Holding",
     isin: "MA0000011785",
-    omkarSymbol: "DHO:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/DHO",
   },
   {
     ticker: "JET",
@@ -399,7 +399,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Construction & Engineering",
     isin: "MA0000012163",
-    omkarSymbol: "JET:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/JET",
   },
   {
     ticker: "EQD",
@@ -408,7 +408,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Financing & Credit",
     isin: "MA0000010043",
-    omkarSymbol: "EQD:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/EQD",
   },
   {
     ticker: "SLF",
@@ -417,7 +417,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Financing & Credit",
     isin: "MA0000011694",
-    omkarSymbol: "SLF:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/SLF",
   },
   {
     ticker: "RIS",
@@ -426,7 +426,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Hotels & Tourism",
     isin: "MA0000011520",
-    omkarSymbol: "RIS:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/RIS",
   },
   {
     ticker: "MAG",
@@ -435,7 +435,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Chemicals & Gases",
     isin: "MA0000010308",
-    omkarSymbol: "MAG:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/MAG",
   },
   {
     ticker: "DIM",
@@ -444,7 +444,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Agri-Food",
     isin: "MA0000011264",
-    omkarSymbol: "DIM:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/DIM",
   },
   {
     ticker: "CRS",
@@ -453,7 +453,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Agri-Food",
     isin: "MA0000011561",
-    omkarSymbol: "CRS:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/CRS",
   },
   {
     ticker: "UNM",
@@ -462,7 +462,7 @@ export const CSE_COMPANIES: CseCompany[] = [
     currency: "MAD",
     sector: "Agri-Food & Seafood",
     isin: "MA0000011322",
-    omkarSymbol: "UNM:CASABLANCA",
+    ficheUrl: "https://www.casablanca-bourse.com/live-market/actions/fiche/UNM",
   },
 ];
 

@@ -1,277 +1,259 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Search,
-  Building2,
-  ArrowRight,
+  FileUp,
+  FileText,
   AlertCircle,
-  KeyRound,
-  RefreshCw,
-  X,
-  SlidersHorizontal,
+  Loader2,
+  CheckCircle2,
+  Sparkles,
+  ArrowRight,
+  UploadCloud,
 } from "lucide-react";
 
-export interface CompanyItem {
-  ticker: string;
-  name: string;
-  exchange: string;
-  currency: string;
-  sector: string;
-  isin?: string;
-}
-
 export function CompanySearch() {
-  const [query, setQuery] = useState("");
-  const [companies, setCompanies] = useState<CompanyItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isApiKeyConfigured, setIsApiKeyConfigured] = useState<boolean | null>(null);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [selectedSector, setSelectedSector] = useState<string>("All");
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successInfo, setSuccessInfo] = useState<{
+    ticker: string;
+    companyName: string;
+    coursMAD: number | null;
+    variationPct: number | null;
+    dateDonnees: string;
+  } | null>(null);
 
-  useEffect(() => {
-    let ignore = false;
-    async function loadCompanies() {
-      setIsLoading(true);
-      setApiError(null);
-      try {
-        const res = await fetch("/api/companies/search", { cache: "no-store" });
-        const json = await res.json();
-        if (ignore) return;
-        if (json.success && Array.isArray(json.companies)) {
-          setCompanies(json.companies);
-          setIsApiKeyConfigured(json.apiKeyConfigured);
-        } else {
-          setApiError(json.error || "Failed to load Casablanca Stock Exchange companies.");
-        }
-      } catch (err: unknown) {
-        if (!ignore) {
-          setApiError((err as Error).message || "Network error loading company directory.");
-        }
-      } finally {
-        if (!ignore) {
-          setIsLoading(false);
-        }
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await uploadFile(files[0]);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await uploadFile(files[0]);
+    }
+  };
+
+  const uploadFile = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      setError("Please upload a PDF file (e.g. Fiche instrument _ Bourse de Casablanca.pdf).");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setSuccessInfo(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/pdf/import", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to process the uploaded PDF.");
+      }
+
+      setSuccessInfo({
+        ticker: json.ticker,
+        companyName: json.companyName,
+        coursMAD: json.coursMAD,
+        variationPct: json.variationPct,
+        dateDonnees: json.dateDonnees,
+      });
+
+      // Navigate to the company overview page after short feedback
+      setTimeout(() => {
+        router.push(`/companies/${encodeURIComponent(json.ticker)}`);
+      }, 700);
+    } catch (err: unknown) {
+      setError((err as Error).message || "An error occurred while uploading the file.");
+    } finally {
+      setIsLoading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     }
-    void loadCompanies();
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  };
 
-  // Collect unique sectors for optional filter tabs
-  const sectors = useMemo(() => {
-    const set = new Set<string>();
-    companies.forEach((c) => {
-      if (c.sector) set.add(c.sector);
-    });
-    return ["All", ...Array.from(set).sort()];
-  }, [companies]);
+  const handleQuickLoadSample = async () => {
+    setIsLoading(true);
+    setError(null);
+    setSuccessInfo(null);
 
-  // Filter companies by search query and sector
-  const filteredCompanies = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return companies.filter((c) => {
-      const matchesSector = selectedSector === "All" || c.sector === selectedSector;
-      if (!matchesSector) return false;
-      if (!q) return true;
-      const matchTicker = c.ticker.toLowerCase().includes(q);
-      const matchName = c.name.toLowerCase().includes(q);
-      const matchSector = c.sector.toLowerCase().includes(q);
-      return matchTicker || matchName || matchSector;
-    });
-  }, [companies, query, selectedSector]);
+    try {
+      const res = await fetch("/api/pdf/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sample: "ATW" }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to load sample Fiche.");
+      }
+
+      setSuccessInfo({
+        ticker: json.ticker,
+        companyName: json.companyName,
+        coursMAD: json.coursMAD,
+        variationPct: json.variationPct,
+        dateDonnees: json.dateDonnees,
+      });
+
+      setTimeout(() => {
+        router.push(`/companies/${encodeURIComponent(json.ticker)}`);
+      }, 700);
+    } catch (err: unknown) {
+      setError((err as Error).message || "Failed to load sample.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="w-full max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="w-full max-w-3xl mx-auto py-12 px-4 sm:px-6">
       {/* Header */}
-      <div className="mb-6 pb-6 border-b border-zinc-200">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-              <span>Bourse de Casablanca</span>
-              <span aria-hidden="true">·</span>
-              <span>CSE Listed Directory</span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 mt-1">
-              Casablanca Stock Exchange Companies
-            </h1>
-            <p className="text-sm text-zinc-600 mt-1">
-              Search by company name or stock symbol to view basic info and start analysis.
-            </p>
-          </div>
-
-          <div className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 shrink-0 self-start sm:self-auto">
-            <span>Listed Companies: </span>
-            <strong className="font-semibold text-zinc-800">{companies.length}</strong>
-          </div>
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-xs font-medium mb-3">
+          <FileText className="w-3.5 h-3.5" />
+          <span>Casablanca Stock Exchange</span>
         </div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">
+          Import Casablanca Stock Exchange PDF
+        </h1>
+        <p className="text-sm text-zinc-600 mt-2 max-w-xl mx-auto leading-relaxed">
+          Upload your official &ldquo;Fiche instrument&rdquo; or &ldquo;Fiche Émetteur&rdquo; (.pdf) to extract stock data, financial reports, indicators, and generate JEV AI investment judgments.
+        </p>
       </div>
 
-      {/* API Key Not Configured Alert */}
-      {isApiKeyConfigured === false && (
-        <div className="mb-6 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <strong className="font-semibold block">Parse.bot API key is not configured</strong>
-              <span>
-                You can browse Casablanca Stock Exchange companies, but real-time quotes and AI analysis require a Parse.bot API key.
-              </span>
-            </div>
-          </div>
-          <Link
-            href="/settings"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-900 text-white rounded-md font-medium text-xs hover:bg-amber-800 transition-colors shrink-0"
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            Configure in Settings
-          </Link>
-        </div>
-      )}
+      {/* Upload Dropzone Container */}
+      <div className="bg-white border border-zinc-200 rounded-2xl p-6 sm:p-10 shadow-xs">
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          onChange={handleFileChange}
+          className="hidden"
+        />
 
-      {/* API Error Alert */}
-      {apiError && (
-        <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-900 text-xs flex items-center gap-2.5">
-          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-          <div className="flex-1 font-medium">{apiError}</div>
-        </div>
-      )}
-
-      {/* Search Input Bar */}
-      <div className="mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
-            <Search className="w-4 h-4" />
+        {/* Drag and Drop Zone */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => !isLoading && fileInputRef.current?.click()}
+          className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all cursor-pointer ${
+            isDragging
+              ? "border-zinc-900 bg-zinc-50"
+              : "border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50/50 bg-white"
+          } ${isLoading ? "pointer-events-none opacity-60" : ""}`}
+        >
+          <div className="w-14 h-14 rounded-2xl bg-zinc-100 text-zinc-800 mx-auto flex items-center justify-center mb-4 transition-transform group-hover:scale-105">
+            {isLoading ? (
+              <Loader2 className="w-7 h-7 animate-spin text-zinc-900" />
+            ) : (
+              <UploadCloud className="w-7 h-7 text-zinc-800" />
+            )}
           </div>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search company name or ticker (e.g. Attijariwafa Bank, ATW, Maroc Telecom, IAM, Akdital)..."
-            className="w-full pl-10 pr-10 py-3 bg-white border border-zinc-300 rounded-xl text-sm text-zinc-900 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-all shadow-xs"
-            autoFocus
-          />
-          {query && (
+
+          <h2 className="text-base font-semibold text-zinc-900">
+            {isLoading ? "Analyzing PDF..." : "Drop your PDF file here, or click to browse"}
+          </h2>
+          <p className="text-xs text-zinc-500 mt-1 max-w-md mx-auto">
+            Supports official Bourse de Casablanca Fiche Instrument (.pdf) documents
+          </p>
+
+          <div className="mt-6 flex items-center justify-center">
             <button
               type="button"
-              onClick={() => setQuery("")}
-              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-700"
-              title="Clear search"
+              disabled={isLoading}
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-xs font-semibold hover:bg-zinc-800 transition-colors shadow-xs cursor-pointer disabled:cursor-not-allowed"
             >
-              <X className="w-4 h-4" />
+              <FileUp className="w-4 h-4" />
+              <span>Select PDF File</span>
             </button>
-          )}
+          </div>
         </div>
 
-        {/* Sector Filter Chips */}
-        {sectors.length > 1 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto py-2.5 mt-1 no-scrollbar">
-            <span className="text-[11px] font-medium text-zinc-600 flex items-center gap-1 mr-1 shrink-0">
-              <SlidersHorizontal className="w-3 h-3" />
-              Sector:
-            </span>
-            {sectors.slice(0, 10).map((sec) => (
-              <button
-                key={sec}
-                type="button"
-                onClick={() => setSelectedSector(sec)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                  selectedSector === sec
-                    ? "bg-zinc-900 text-white"
-                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900"
-                }`}
-              >
-                {sec}
-              </button>
-            ))}
+        {/* Quick Sample Button */}
+        <div className="mt-6 pt-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-600">
+          <span className="text-zinc-500">
+            Or test with preloaded Casablanca Stock Exchange data:
+          </span>
+          <button
+            type="button"
+            onClick={handleQuickLoadSample}
+            disabled={isLoading}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 font-medium transition-colors cursor-pointer disabled:opacity-50"
+            title="Load Attijariwafa Bank official Fiche sample"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-zinc-500" />
+            <span>Load Sample (Attijariwafa Bank - ATW)</span>
+          </button>
+        </div>
+
+        {/* Error Feedback */}
+        {error && (
+          <div className="mt-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-900 text-xs flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <div className="flex-1 font-medium leading-relaxed">{error}</div>
+          </div>
+        )}
+
+        {/* Success Feedback */}
+        {successInfo && (
+          <div className="mt-6 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-950 text-xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div>
+                <strong className="font-semibold block text-emerald-900">
+                  {successInfo.companyName} ({successInfo.ticker}) parsed successfully
+                </strong>
+                <span className="text-emerald-700 text-[11px]">
+                  Price: {successInfo.coursMAD?.toFixed(2)} MAD · Redirecting to analysis...
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push(`/companies/${encodeURIComponent(successInfo.ticker)}`)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-900 text-white font-medium hover:bg-emerald-800 transition-colors shrink-0"
+            >
+              <span>View</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
         )}
       </div>
-
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="py-20 text-center text-zinc-500 text-sm flex flex-col items-center gap-2">
-          <RefreshCw className="w-5 h-5 animate-spin text-zinc-400" />
-          Loading Casablanca Stock Exchange directory...
-        </div>
-      ) : filteredCompanies.length === 0 ? (
-        /* No Results State */
-        <div className="border border-zinc-200 rounded-xl p-12 text-center bg-white shadow-xs">
-          <Building2 className="w-8 h-8 text-zinc-400 mx-auto mb-3" />
-          <h2 className="text-base font-semibold text-zinc-900">No companies found</h2>
-          <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
-            No Casablanca Stock Exchange listed company matched &ldquo;{query}&rdquo;.
-            Try searching by ticker (e.g. ATW, IAM, BCP) or company name.
-          </p>
-          {query && (
-            <button
-              type="button"
-              onClick={() => {
-                setQuery("");
-                setSelectedSector("All");
-              }}
-              className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-md transition-colors"
-            >
-              Reset search
-            </button>
-          )}
-        </div>
-      ) : (
-        /* Results Grid */
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between text-xs text-zinc-500 px-1 pb-1">
-            <span>
-              Showing {filteredCompanies.length}{" "}
-              {filteredCompanies.length === 1 ? "company" : "companies"}
-            </span>
-            <span className="hidden sm:inline">Select a company to open overview</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {filteredCompanies.map((company) => (
-              <Link
-                key={company.ticker}
-                href={`/companies/${company.ticker}`}
-                className="group p-4 bg-white border border-zinc-200 rounded-xl hover:border-zinc-400 hover:shadow-xs transition-all flex flex-col justify-between"
-              >
-                <div>
-                  {/* Top row: Ticker + Sector */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-sm font-bold text-zinc-900 group-hover:text-black">
-                      {company.ticker}
-                    </span>
-                    <span className="text-[11px] text-zinc-500 bg-zinc-50 px-2 py-0.5 rounded border border-zinc-200">
-                      {company.sector}
-                    </span>
-                  </div>
-
-                  {/* Company Name */}
-                  <h2 className="text-sm font-semibold text-zinc-800 mt-1.5 group-hover:text-black line-clamp-1">
-                    {company.name}
-                  </h2>
-                </div>
-
-                {/* Bottom row: Exchange + Currency + Action */}
-                <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-                  <div className="text-zinc-500 text-[11px] flex items-center gap-2">
-                    <span>{company.exchange}</span>
-                    <span aria-hidden="true">·</span>
-                    <span className="font-medium text-zinc-700">{company.currency}</span>
-                  </div>
-
-                  <span className="text-zinc-400 group-hover:text-zinc-900 group-hover:translate-x-0.5 transition-all flex items-center gap-1 text-[11px] font-medium">
-                    View
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

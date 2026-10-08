@@ -6,10 +6,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { provider, apiKey } = body as { provider?: string; apiKey?: string };
 
-    const validProviders: Provider[] = ["parsebot", "jev"];
+    const validProviders: Provider[] = ["jev"];
     if (!provider || !validProviders.includes(provider as Provider)) {
       return NextResponse.json(
-        { success: false, error: "Invalid provider specified. Must be 'parsebot' or 'jev'." },
+        { success: false, error: "Invalid provider specified. Must be 'jev'." },
         { status: 400 }
       );
     }

@@ -26,10 +26,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { provider, apiKey } = body as { provider?: string; apiKey?: string };
 
-    const validProviders: Provider[] = ["parsebot", "jev"];
+    const validProviders: Provider[] = ["jev"];
     if (!provider || !validProviders.includes(provider as Provider)) {
       return NextResponse.json(
-        { success: false, error: "Invalid provider specified. Must be 'parsebot' or 'jev'." },
+        { success: false, error: "Invalid provider specified. Must be 'jev'." },
         { status: 400 }
       );
     }
@@ -42,7 +42,6 @@ export async function POST(req: NextRequest) {
     }
 
     const providerNames: Record<Provider, string> = {
-      parsebot: "Parse.bot API",
       jev: "JEV AI",
     };
 
@@ -68,16 +67,15 @@ export async function DELETE(req: NextRequest) {
     const body = await req.json();
     const { provider } = body as { provider?: string };
 
-    const validProviders: Provider[] = ["parsebot", "jev"];
+    const validProviders: Provider[] = ["jev"];
     if (!provider || !validProviders.includes(provider as Provider)) {
       return NextResponse.json(
-        { success: false, error: "Invalid provider specified. Must be 'parsebot' or 'jev'." },
+        { success: false, error: "Invalid provider specified. Must be 'jev'." },
         { status: 400 }
       );
     }
 
     const providerNames: Record<Provider, string> = {
-      parsebot: "Parse.bot API",
       jev: "JEV AI",
     };
 

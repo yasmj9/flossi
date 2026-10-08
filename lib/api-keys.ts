@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-export type Provider = "parsebot" | "jev";
+export type Provider = "jev";
 
 export interface ProviderStatus {
   provider: Provider;
@@ -38,7 +38,6 @@ async function readStorage(): Promise<StorageData> {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") {
       return {};
     }
-    // If invalid JSON, treat as empty
     return {};
   }
 }
@@ -70,7 +69,6 @@ export function maskApiKey(key: string): string {
  * Checks persistent storage first, then falls back to process.env.
  * 
  * Usage:
- * const omkarKey = await getApiKey('omkar');
  * const jevKey = await getApiKey('jev');
  */
 export async function getApiKey(provider: Provider): Promise<string | null> {
@@ -84,10 +82,8 @@ export async function getApiKey(provider: Provider): Promise<string | null> {
     // If storage read fails, continue to environment variable check
   }
 
-  // Fallback to environment variables if provided
-  if (provider === "parsebot") {
-    return process.env.PARSE_API_KEY?.trim() || null;
-  } else if (provider === "jev") {
+  // Fallback to environment variable if provided
+  if (provider === "jev") {
     return process.env.JEV_API_KEY?.trim() || null;
   }
 
@@ -95,28 +91,17 @@ export async function getApiKey(provider: Provider): Promise<string | null> {
 }
 
 /**
- * Returns configuration status for all supported providers.
+ * Returns configuration status for supported providers (JEV AI).
  * Never exposes the full raw key.
  */
 export async function getApiKeysStatus(): Promise<Record<Provider, ProviderStatus>> {
   const storage = await readStorage();
 
   const providers: { id: Provider; displayName: string; envFallback: string | undefined }[] = [
-    { id: "parsebot", displayName: "Parse.bot API", envFallback: process.env.PARSE_API_KEY },
     { id: "jev", displayName: "JEV AI", envFallback: process.env.JEV_API_KEY },
   ];
 
   const result: Record<Provider, ProviderStatus> = {
-    parsebot: {
-      provider: "parsebot",
-      displayName: "Parse.bot API",
-      isConfigured: false,
-      maskedKey: null,
-      configuredAt: null,
-      lastTestedAt: null,
-      lastTestSuccess: null,
-      lastTestMessage: null,
-    },
     jev: {
       provider: "jev",
       displayName: "JEV AI",
@@ -243,57 +228,7 @@ export async function testProviderConnection(
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
-    if (provider === "parsebot") {
-      // Parse.bot live API test:
-      // Calls Parse.bot marketplace search endpoint which validates X-API-Key
-      const res = await fetch("https://api.parse.bot/marketplace/apis?q=stock", {
-        method: "GET",
-        headers: {
-          "X-API-Key": activeKey,
-          Accept: "application/json",
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      let data: Record<string, unknown> | null = null;
-      try {
-        data = (await res.json()) as Record<string, unknown>;
-      } catch {
-        // Response was not JSON
-      }
-
-      if (res.ok) {
-        await updateTestStatus(provider, true, "Connection successful. Parse.bot API validated the key.");
-        return {
-          success: true,
-          statusCode: res.status,
-          message: "Connection successful. Parse.bot accepted and validated the API key.",
-        };
-      }
-
-      const errMsg =
-        (data?.error as string) ||
-        (data?.detail as string) ||
-        (data?.message as string) ||
-        res.statusText;
-
-      let failureReason = `Connection failed (${res.status}): ${errMsg || "Authentication error"}`;
-
-      if (res.status === 401) {
-        failureReason = `Invalid API key (401): ${errMsg || "Parse.bot rejected the key as unauthorized. Get a key at https://parse.bot"}`;
-      } else if (res.status === 403) {
-        failureReason = `Access forbidden (403): ${errMsg || "Parse.bot access forbidden."}`;
-      }
-
-      await updateTestStatus(provider, false, failureReason);
-      return {
-        success: false,
-        statusCode: res.status,
-        message: failureReason,
-      };
-    } else if (provider === "jev") {
+    if (provider === "jev") {
       // JEV AI live API test:
       // Uses TypeSafe AI / JEV AI systemone endpoint with Authorization Bearer header
       const testPayload = {

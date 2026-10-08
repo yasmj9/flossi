@@ -3,7 +3,7 @@ import { CompanySearch } from "@/components/CompanySearch";
 
 export const metadata: Metadata = {
   title: "Companies — Casablanca Stock Exchange",
-  description: "Search and select companies listed on the Casablanca Stock Exchange (BVC).",
+  description: "Casablanca Stock Exchange listed companies — import official Fiche Instrument PDFs to analyze stock performance and generate JEV AI investment judgments.",
 };
 
 export default function CompaniesPage() {

@@ -29,37 +29,17 @@ export async function POST(
       );
     }
 
-    // Check configuration
-    const parsebotKey = await getApiKey("parsebot");
-
-    if (!parsebotKey) {
-      return NextResponse.json({
-        success: false,
-        status: "parsebot_not_configured",
-        company,
-        error: "Parse.bot API key is not configured. Configure it in Settings to fetch stock & financial data.",
-      });
-    }
-
-    const jevKey = await getApiKey("jev");
-    if (!jevKey) {
-      return NextResponse.json({
-        success: false,
-        status: "jev_not_configured",
-        company,
-        error: "JEV AI API key is not configured. Configure it in Settings to perform investment decision analysis.",
-      });
-    }
-
-    // Step 1 - 5: Fetch company, price, financials, news via Parse.bot API and normalize
+    // Step 1: Fetch company, price, financials from imported Fiche Émetteur PDF
     const companyData = await fetchFullCompanyDataFromParseBot(company.ticker);
 
-    if (companyData.status === "api_error") {
+    if (companyData.status === "fiche_required") {
       return NextResponse.json({
         success: false,
-        status: "api_error",
+        status: "fiche_required",
         company,
-        error: companyData.error || "Failed to fetch company data via Parse.bot API.",
+        error:
+          companyData.error ||
+          `No Fiche Instrument PDF imported yet for ${company.name} (${company.ticker}). Please use the Import PDF button to upload the official Casablanca Stock Exchange factsheet.`,
       });
     }
 
@@ -78,7 +58,34 @@ export async function POST(
         success: false,
         status: "company_data_unavailable",
         company,
-        error: "Unable to normalize stock data for analysis.",
+        error: "Unable to normalize stock data from the Fiche PDF for analysis.",
+      });
+    }
+
+    // Step 2: Check JEV key
+    const jevKey = await getApiKey("jev");
+    if (!jevKey) {
+      return NextResponse.json({
+        success: false,
+        status: "jev_not_configured",
+        company,
+        currentPrice: companyData.quote?.latestPrice ?? null,
+        currency: companyData.quote?.currency || company.currency,
+        valuationMetrics: {
+          currentPer: companyData.financials?.per ?? companyData.fiveYearIndicators?.summaries.per.latestValue ?? null,
+          fiveYearAveragePer: companyData.fiveYearIndicators?.summaries.per.fiveYearAverage ?? null,
+          currentEps: companyData.financials?.eps ?? companyData.fiveYearIndicators?.summaries.bpa.latestValue ?? null,
+          roe: companyData.financials?.roe ?? companyData.fiveYearIndicators?.summaries.roe.latestValue ?? null,
+          dividendYield: companyData.financials?.dividendYield ?? companyData.fiveYearIndicators?.summaries.dividendYield.latestValue ?? null,
+          currency: companyData.quote?.currency || company.currency,
+        },
+        technicalStructure: companyData.technicalStructure || null,
+        candidateEntryZones: companyData.candidateEntryZones || [],
+        fiveYearIndicators: companyData.fiveYearIndicators || null,
+        financialStatementsSummary: companyData.financialStatementsSummary || null,
+        ficheEmetteur: companyData.ficheEmetteur || null,
+        dataUsedForAnalysis: normalizedJson,
+        error: "JEV AI API key is not configured. Configure it in Settings to perform investment decision analysis (BUY / HOLD / SELL).",
       });
     }
 
@@ -137,6 +144,7 @@ export async function POST(
       candidateEntryZones: companyData.candidateEntryZones || [],
       fiveYearIndicators: companyData.fiveYearIndicators || null,
       financialStatementsSummary: companyData.financialStatementsSummary || null,
+      ficheEmetteur: companyData.ficheEmetteur || null,
       dataUsedForAnalysis: normalizedJson,
     });
   } catch (err: unknown) {

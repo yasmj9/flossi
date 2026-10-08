@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCseCompany } from "@/lib/cse-companies";
 import { fetchCompanyFromParseBot } from "@/lib/parsebot-client";
-import { getApiKey } from "@/lib/api-keys";
 
 export async function GET(
   _req: NextRequest,
@@ -26,18 +25,6 @@ export async function GET(
         },
         { status: 404 }
       );
-    }
-
-    const parsebotKey = await getApiKey("parsebot");
-
-    if (!parsebotKey) {
-      return NextResponse.json({
-        success: true,
-        status: "api_key_not_configured",
-        company,
-        quote: null,
-        error: "Parse.bot API key is not configured. Configure it in Settings to fetch real-time market data.",
-      });
     }
 
     const result = await fetchCompanyFromParseBot(company.ticker);
