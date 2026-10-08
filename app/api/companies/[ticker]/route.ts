@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCseCompany } from "@/lib/cse-companies";
+import { fetchCompanyFromDrahmi } from "@/lib/drahmi-client";
 import { fetchCompanyFromOmkar } from "@/lib/omkar-client";
 import { getApiKey } from "@/lib/api-keys";
 
@@ -28,25 +29,29 @@ export async function GET(
       );
     }
 
+    const drahmiKey = await getApiKey("drahmi");
     const omkarKey = await getApiKey("omkar");
-    if (!omkarKey) {
+
+    if (!drahmiKey && !omkarKey) {
       return NextResponse.json({
         success: true,
         status: "api_key_not_configured",
         company,
         quote: null,
-        error: "Omkar Cloud API key is not configured. Configure it in Settings to fetch real-time market data.",
+        error: "Drahmi API key is not configured. Configure it in Settings to fetch real-time market data.",
       });
     }
 
-    const omkarResult = await fetchCompanyFromOmkar(company.ticker);
+    const result = drahmiKey
+      ? await fetchCompanyFromDrahmi(company.ticker)
+      : await fetchCompanyFromOmkar(company.ticker);
 
     return NextResponse.json({
-      success: omkarResult.status === "success",
-      status: omkarResult.status,
-      company: omkarResult.company || company,
-      quote: omkarResult.quote || null,
-      error: omkarResult.error || null,
+      success: result.status === "success",
+      status: result.status,
+      company: result.company || company,
+      quote: result.quote || null,
+      error: result.error || null,
     });
   } catch (err: unknown) {
     return NextResponse.json(

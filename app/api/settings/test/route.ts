@@ -6,9 +6,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { provider, apiKey } = body as { provider?: string; apiKey?: string };
 
-    if (!provider || (provider !== "omkar" && provider !== "jev")) {
+    const validProviders: Provider[] = ["drahmi", "omkar", "jev"];
+    if (!provider || !validProviders.includes(provider as Provider)) {
       return NextResponse.json(
-        { success: false, error: "Invalid provider specified. Must be 'omkar' or 'jev'." },
+        { success: false, error: "Invalid provider specified. Must be 'drahmi', 'omkar', or 'jev'." },
         { status: 400 }
       );
     }

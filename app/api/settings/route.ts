@@ -26,9 +26,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { provider, apiKey } = body as { provider?: string; apiKey?: string };
 
-    if (!provider || (provider !== "omkar" && provider !== "jev")) {
+    const validProviders: Provider[] = ["drahmi", "omkar", "jev"];
+    if (!provider || !validProviders.includes(provider as Provider)) {
       return NextResponse.json(
-        { success: false, error: "Invalid provider specified. Must be 'omkar' or 'jev'." },
+        { success: false, error: "Invalid provider specified. Must be 'drahmi', 'omkar', or 'jev'." },
         { status: 400 }
       );
     }
@@ -40,10 +41,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const providerNames: Record<Provider, string> = {
+      drahmi: "Drahmi API",
+      omkar: "Omkar Cloud",
+      jev: "JEV AI",
+    };
+
     const result = await saveApiKey(provider as Provider, apiKey);
     return NextResponse.json({
       success: true,
-      message: `${provider === "omkar" ? "Omkar Cloud" : "JEV AI"} API key saved successfully.`,
+      message: `${providerNames[provider as Provider] || provider} API key saved successfully.`,
       maskedKey: result.maskedKey,
     });
   } catch (err: unknown) {
@@ -62,17 +69,24 @@ export async function DELETE(req: NextRequest) {
     const body = await req.json();
     const { provider } = body as { provider?: string };
 
-    if (!provider || (provider !== "omkar" && provider !== "jev")) {
+    const validProviders: Provider[] = ["drahmi", "omkar", "jev"];
+    if (!provider || !validProviders.includes(provider as Provider)) {
       return NextResponse.json(
-        { success: false, error: "Invalid provider specified. Must be 'omkar' or 'jev'." },
+        { success: false, error: "Invalid provider specified. Must be 'drahmi', 'omkar', or 'jev'." },
         { status: 400 }
       );
     }
 
+    const providerNames: Record<Provider, string> = {
+      drahmi: "Drahmi API",
+      omkar: "Omkar Cloud",
+      jev: "JEV AI",
+    };
+
     await removeApiKey(provider as Provider);
     return NextResponse.json({
       success: true,
-      message: `${provider === "omkar" ? "Omkar Cloud" : "JEV AI"} API key removed successfully.`,
+      message: `${providerNames[provider as Provider] || provider} API key removed successfully.`,
     });
   } catch (err: unknown) {
     return NextResponse.json(

@@ -14,10 +14,11 @@ import {
   HelpCircle,
   Database,
   Cpu,
+  BarChart3,
 } from "lucide-react";
 
 export interface ProviderStatus {
-  provider: "omkar" | "jev";
+  provider: "drahmi" | "omkar" | "jev";
   displayName: string;
   isConfigured: boolean;
   maskedKey: string | null;
@@ -33,14 +34,14 @@ interface MessageState {
 }
 
 interface ProviderCardProps {
-  provider: "omkar" | "jev";
+  provider: "drahmi" | "omkar" | "jev";
   title: string;
   roleDescription: string;
   purposeNote: string;
   icon: React.ReactNode;
   status: ProviderStatus | undefined;
   onRefreshStatus: () => Promise<void>;
-  onStatusChange?: (provider: "omkar" | "jev", isConfigured: boolean) => void;
+  onStatusChange?: (provider: "drahmi" | "omkar" | "jev", isConfigured: boolean) => void;
 }
 
 function ProviderCard({
@@ -396,9 +397,10 @@ function ProviderCard({
 export function SettingsManager({
   onStatusUpdate,
 }: {
-  onStatusUpdate?: (omkar: boolean, jev: boolean) => void;
+  onStatusUpdate?: (drahmi: boolean, omkar: boolean, jev: boolean) => void;
 }) {
   const [statuses, setStatuses] = useState<{
+    drahmi?: ProviderStatus;
     omkar?: ProviderStatus;
     jev?: ProviderStatus;
   }>({});
@@ -413,6 +415,7 @@ export function SettingsManager({
         setStatuses(json.data);
         if (onStatusUpdate) {
           onStatusUpdate(
+            !!json.data.drahmi?.isConfigured,
             !!json.data.omkar?.isConfigured,
             !!json.data.jev?.isConfigured
           );
@@ -438,6 +441,7 @@ export function SettingsManager({
         if (json.success && json.data) {
           setStatuses(json.data);
           onStatusUpdate?.(
+            !!json.data.drahmi?.isConfigured,
             !!json.data.omkar?.isConfigured,
             !!json.data.jev?.isConfigured
           );
@@ -495,12 +499,23 @@ export function SettingsManager({
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Drahmi API Section */}
+          <ProviderCard
+            provider="drahmi"
+            title="Drahmi API"
+            roleDescription="Dedicated Casablanca Stock Exchange API provider for Moroccan quotes, fundamentals, dividends, and technical intelligence."
+            purposeNote="Used for Bourse de Casablanca stocks. Get an API key at https://drahmi.app/api."
+            icon={<BarChart3 className="w-5 h-5 text-zinc-800" />}
+            status={statuses.drahmi}
+            onRefreshStatus={fetchStatuses}
+          />
+
           {/* Omkar Cloud Section */}
           <ProviderCard
             provider="omkar"
             title="Omkar Cloud"
-            roleDescription="Primary data provider for stock quotes, financial reports, ratios, dividends, and news."
-            purposeNote="Used first whenever it provides data. Stored keys are never displayed in full."
+            roleDescription="Secondary data provider for financial reports, ratios, dividends, and news."
+            purposeNote="Optional provider for financial data. Stored keys are never displayed in full."
             icon={<Database className="w-5 h-5 text-zinc-800" />}
             status={statuses.omkar}
             onRefreshStatus={fetchStatuses}

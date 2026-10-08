@@ -43,6 +43,7 @@ interface AnalysisResponse {
   success: boolean;
   status:
     | "success"
+    | "drahmi_not_configured"
     | "omkar_not_configured"
     | "jev_not_configured"
     | "api_error"
@@ -172,7 +173,7 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
             Analyzing {ticker.toUpperCase()}...
           </div>
           <p className="text-xs text-zinc-500 max-w-sm">
-            Retrieving stock & financial data from Omkar Cloud and consulting JEV AI decision engine.
+            Retrieving stock & financial data from Drahmi API and consulting JEV AI decision engine.
           </p>
         </div>
       </div>
@@ -180,7 +181,13 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
   }
 
   // 2. Unsupported Company State
-  if (data?.status === "unsupported_company" || (!data?.company && data?.status !== "omkar_not_configured" && data?.status !== "jev_not_configured")) {
+  if (
+    data?.status === "unsupported_company" ||
+    (!data?.company &&
+      data?.status !== "drahmi_not_configured" &&
+      data?.status !== "omkar_not_configured" &&
+      data?.status !== "jev_not_configured")
+  ) {
     return (
       <div className="w-full max-w-4xl mx-auto py-12 px-4 sm:px-6">
         <div className="mb-6">
@@ -212,6 +219,7 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
   }
 
   const company = data.company!;
+  const isDrahmiNotConfigured = data.status === "drahmi_not_configured";
   const isOmkarNotConfigured = data.status === "omkar_not_configured";
   const isJevNotConfigured = data.status === "jev_not_configured";
   const isJevError = data.status === "jev_error";
@@ -269,14 +277,14 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
         </div>
 
         {/* 3. Provider Configuration Alerts */}
-        {isOmkarNotConfigured && (
+        {(isDrahmiNotConfigured || isOmkarNotConfigured) && (
           <div className="my-6 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <strong className="font-semibold block">Omkar Cloud API key is not configured</strong>
+                <strong className="font-semibold block">Drahmi API key is not configured</strong>
                 <span>
-                  Configure your Omkar Cloud API key in Settings to retrieve stock prices, financial reports, and news.
+                  Configure your Drahmi API key in Settings to retrieve real-time Casablanca Stock Exchange prices, financial reports, indicators, and news.
                 </span>
               </div>
             </div>

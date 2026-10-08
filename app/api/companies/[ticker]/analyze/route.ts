@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCseCompany } from "@/lib/cse-companies";
+import { fetchFullCompanyDataFromDrahmi } from "@/lib/drahmi-client";
 import { fetchFullCompanyDataFromOmkar } from "@/lib/omkar-client";
 import { analyzeWithJev } from "@/lib/jev-client";
 import { getApiKey } from "@/lib/api-keys";
@@ -30,13 +31,15 @@ export async function POST(
     }
 
     // Check configuration
+    const drahmiKey = await getApiKey("drahmi");
     const omkarKey = await getApiKey("omkar");
-    if (!omkarKey) {
+
+    if (!drahmiKey && !omkarKey) {
       return NextResponse.json({
         success: false,
-        status: "omkar_not_configured",
+        status: "drahmi_not_configured",
         company,
-        error: "Omkar Cloud API key is not configured. Configure it in Settings to fetch stock & financial data.",
+        error: "Drahmi API key is not configured. Configure it in Settings to fetch Casablanca Stock Exchange data.",
       });
     }
 
@@ -50,28 +53,40 @@ export async function POST(
       });
     }
 
-    // Step 1 - 5: Fetch company, price, financials, news from Omkar Cloud & normalize
-    const omkarData = await fetchFullCompanyDataFromOmkar(company.ticker);
+    // Step 1 - 5: Fetch company, price, financials, news and normalize
+    // Drahmi is the dedicated Moroccan stock market API
+    let companyData;
+    if (drahmiKey) {
+      companyData = await fetchFullCompanyDataFromDrahmi(company.ticker);
+    } else {
+      companyData = await fetchFullCompanyDataFromOmkar(company.ticker);
+    }
 
-    if (omkarData.status === "api_error") {
+    if (companyData.status === "api_error") {
+      // If Omkar failed with ticker errors, give user direct recommendation to use Drahmi
+      const isOmkarTickerError = !drahmiKey && (companyData.error?.includes("symbol") || companyData.error?.includes("ticker") || companyData.error?.includes("400"));
+      const userError = isOmkarTickerError
+        ? "Omkar Cloud does not support Casablanca Stock Exchange tickers. Please configure Drahmi API in Settings."
+        : companyData.error || "Failed to fetch company data.";
+
       return NextResponse.json({
         success: false,
         status: "api_error",
         company,
-        error: omkarData.error || "Failed to fetch data from Omkar Cloud.",
+        error: userError,
       });
     }
 
-    if (omkarData.status === "unsupported_company") {
+    if (companyData.status === "unsupported_company") {
       return NextResponse.json({
         success: false,
         status: "company_data_unavailable",
         company,
-        error: omkarData.error || `Data for '${company.ticker}' is currently unavailable from Omkar Cloud.`,
+        error: companyData.error || `Data for '${company.ticker}' is currently unavailable.`,
       });
     }
 
-    const normalizedJson = omkarData.normalizedJevInput;
+    const normalizedJson = companyData.normalizedJevInput;
     if (!normalizedJson) {
       return NextResponse.json({
         success: false,
@@ -98,8 +113,8 @@ export async function POST(
         success: false,
         status: "jev_error",
         company,
-        currentPrice: omkarData.quote?.latestPrice ?? null,
-        currency: omkarData.quote?.currency || company.currency,
+        currentPrice: companyData.quote?.latestPrice ?? null,
+        currency: companyData.quote?.currency || company.currency,
         dataUsedForAnalysis: normalizedJson,
         error: jevResult.error || "JEV AI returned an error while processing the investment decision.",
       });
@@ -110,8 +125,8 @@ export async function POST(
       success: true,
       status: "success",
       company,
-      currentPrice: omkarData.quote?.latestPrice ?? null,
-      currency: omkarData.quote?.currency || company.currency,
+      currentPrice: companyData.quote?.latestPrice ?? null,
+      currency: companyData.quote?.currency || company.currency,
       jevDecision: jevResult.decision || "HOLD",
       jevConfidence: jevResult.confidence,
       probabilities: jevResult.probabilities || null,
@@ -121,21 +136,21 @@ export async function POST(
       investmentContext: jevResult.investmentContext || null,
       valuation: jevResult.valuation || null,
       valuationMetrics: {
-        currentPer: omkarData.financials?.per ?? omkarData.fiveYearIndicators?.summaries.per.latestValue ?? null,
-        fiveYearAveragePer: omkarData.fiveYearIndicators?.summaries.per.fiveYearAverage ?? null,
-        currentEps: omkarData.financials?.eps ?? omkarData.fiveYearIndicators?.summaries.bpa.latestValue ?? null,
-        roe: omkarData.financials?.roe ?? omkarData.fiveYearIndicators?.summaries.roe.latestValue ?? null,
-        dividendYield: omkarData.financials?.dividendYield ?? omkarData.fiveYearIndicators?.summaries.dividendYield.latestValue ?? null,
-        currency: omkarData.quote?.currency || company.currency,
+        currentPer: companyData.financials?.per ?? companyData.fiveYearIndicators?.summaries.per.latestValue ?? null,
+        fiveYearAveragePer: companyData.fiveYearIndicators?.summaries.per.fiveYearAverage ?? null,
+        currentEps: companyData.financials?.eps ?? companyData.fiveYearIndicators?.summaries.bpa.latestValue ?? null,
+        roe: companyData.financials?.roe ?? companyData.fiveYearIndicators?.summaries.roe.latestValue ?? null,
+        dividendYield: companyData.financials?.dividendYield ?? companyData.fiveYearIndicators?.summaries.dividendYield.latestValue ?? null,
+        currency: companyData.quote?.currency || company.currency,
       },
       technical: jevResult.technical || null,
-      technicalStructure: omkarData.technicalStructure || null,
+      technicalStructure: companyData.technicalStructure || null,
       newsImpact: jevResult.newsImpact || null,
-      news: omkarData.news || [],
+      news: companyData.news || [],
       entries: jevResult.entries || [],
-      candidateEntryZones: omkarData.candidateEntryZones || [],
-      fiveYearIndicators: omkarData.fiveYearIndicators || null,
-      financialStatementsSummary: omkarData.financialStatementsSummary || null,
+      candidateEntryZones: companyData.candidateEntryZones || [],
+      fiveYearIndicators: companyData.fiveYearIndicators || null,
+      financialStatementsSummary: companyData.financialStatementsSummary || null,
       dataUsedForAnalysis: normalizedJson,
     });
   } catch (err: unknown) {
