@@ -114,7 +114,22 @@ export interface JevQuickstartPayload {
         SELL: string;
       };
     };
-    fundamental_quality: {
+    investment_potential: {
+      type: "score";
+      instructions: string;
+      criteria: string[];
+    };
+    financial_quality: {
+      type: "score";
+      instructions: string;
+      criteria: string[];
+    };
+    growth_potential: {
+      type: "score";
+      instructions: string;
+      criteria: string[];
+    };
+    profitability_quality: {
       type: "score";
       instructions: string;
       criteria: string[];
@@ -124,12 +139,12 @@ export interface JevQuickstartPayload {
       instructions: string;
       criteria: string[];
     };
-    technical_attractiveness: {
+    dividend_sustainability: {
       type: "score";
       instructions: string;
       criteria: string[];
     };
-    entry_attractiveness: {
+    entry_timing: {
       type: "score";
       instructions: string;
       criteria: string[];
@@ -291,59 +306,95 @@ export function buildJevQuickstartPayload(
       investment_decision: {
         type: "choice",
         instructions:
-          "Based only on the provided company fundamentals, valuation, technical structure, financial statements, five-year ratios, cash flow, and recent news, what is the most appropriate investment decision right now? Consider both upside potential and downside risk. Do not assume missing information is positive.",
+          "Based on the comprehensive medium-to-long-term evaluation of company business quality, financial strength, profitability, sustainable growth, dividend safety, and valuation (with technical entry timing as secondary), what is the most appropriate long-term investment decision right now? Consider a medium-to-long-term horizon. Do not assume missing information is positive.",
         criteria: {
-          BUY: "The available evidence is sufficiently favorable to justify opening or increasing an investment position at the current price or near a credible entry zone.",
-          HOLD: "The evidence is mixed, incomplete, fairly valued, or not attractive enough for a new purchase, but does not strongly justify selling.",
-          SELL: "The available evidence shows sufficiently unfavorable fundamentals, valuation, technical structure, news, or risk to justify reducing or avoiding the position.",
+          BUY: "The available evidence supports strong long-term investment potential with sound financials, sustainable profitability, acceptable valuation, and favorable medium-to-long-term prospects.",
+          HOLD: "The evidence shows acceptable or average long-term potential, fair valuation, or mixed fundamentals not attractive enough for new aggressive capital, but does not justify selling.",
+          SELL: "The available evidence shows structural weaknesses, deterioration in profitability or financial strength, excessive valuation, or high long-term risks justifying avoiding or reducing the position.",
         },
       },
-      fundamental_quality: {
+      investment_potential: {
         type: "score",
         instructions:
-          "Assess the overall fundamental quality of the company using the balance sheet, income statement, cash flow, profitability, growth, debt, equity, and five-year financial evolution.",
+          "Evaluate the company's long-term investment potential based on its business quality, financial performance, profitability, growth, balance sheet, cash generation, shareholder returns, valuation and future prospects. Focus on the company as an investment, not short-term trading movements.",
         criteria: [
-          "Very weak fundamentals with significant deterioration or financial weakness",
-          "Weak fundamentals with several important concerns",
-          "Mixed or average fundamentals with both strengths and weaknesses",
-          "Strong fundamentals with healthy profitability, balance sheet, and financial trends",
-          "Excellent fundamentals with consistently strong profitability, cash generation, balance sheet quality, and historical improvement",
+          "Very poor investment potential with significant structural or financial weaknesses",
+          "Weak investment potential with limited growth or important risks",
+          "Average investment potential with a mixture of strengths and weaknesses",
+          "Strong investment potential supported by good business and financial fundamentals",
+          "Excellent investment potential supported by strong financial quality, sustainable growth and attractive future prospects",
+        ],
+      },
+      financial_quality: {
+        type: "score",
+        instructions:
+          "Evaluate the overall financial quality of the company using the balance sheet, debt, equity, profitability, cash position and cash flow.",
+        criteria: [
+          "Very weak financial quality",
+          "Weak financial quality",
+          "Acceptable financial quality",
+          "Strong financial quality",
+          "Excellent financial quality",
+        ],
+      },
+      growth_potential: {
+        type: "score",
+        instructions:
+          "Evaluate the company's ability to grow its business and shareholder value over the coming years. Consider revenue growth, earnings growth, EPS evolution, ROE evolution, investments, business expansion and relevant company news.",
+        criteria: [
+          "Very weak growth potential or declining business",
+          "Limited growth potential",
+          "Moderate growth potential",
+          "Strong growth potential",
+          "Excellent sustainable long-term growth potential",
+        ],
+      },
+      profitability_quality: {
+        type: "score",
+        instructions:
+          "Evaluate the quality and sustainability of the company's profitability. Consider operating margins, net margin, return on equity (ROE) evolution, earnings consistency, and competitive strength.",
+        criteria: [
+          "Very weak profitability or structural losses",
+          "Weak profitability with low margins or volatile earnings",
+          "Acceptable profitability with stable but modest margins",
+          "Strong and consistent profitability",
+          "Exceptional profitability with high and sustainable margins",
         ],
       },
       valuation_attractiveness: {
         type: "score",
         instructions:
-          "Assess how attractive the current stock valuation is using current PER, historical PER, EPS, EPS trend, ROE, dividend yield, payout ratio, earnings growth, and current price. Do not treat a low PER alone as sufficient evidence of undervaluation.",
+          "Evaluate the company's valuation from a long-term investment perspective using PER, five-year average PER, EPS trend, ROE, dividend yield, and growth outlook. Do not treat low multiples alone as sufficient evidence of undervaluation.",
         criteria: [
-          "Very unattractive valuation or clearly overvalued relative to available evidence",
+          "Very unattractive valuation or clearly overvalued relative to long-term fundamentals",
           "Unattractive valuation with limited margin of safety",
-          "Approximately fairly valued or valuation evidence is mixed",
-          "Attractive valuation with a reasonable margin of safety",
-          "Very attractive valuation with strong evidence of undervaluation and favorable fundamentals",
+          "Fairly valued relative to fundamentals and earnings quality",
+          "Attractive valuation offering a solid margin of safety for long-term holding",
+          "Highly attractive valuation offering strong long-term upside and safety margin",
         ],
       },
-      technical_attractiveness: {
+      dividend_sustainability: {
         type: "score",
         instructions:
-          "Assess the current technical attractiveness using trend, support, resistance, breakout or retest status, volume context, volatility, and distance from major support and resistance.",
+          "Evaluate the sustainability, safety, and attractiveness of the company's dividends and shareholder returns. Consider dividend yield, payout ratio, cash generation, balance sheet cushion, and historical track record.",
         criteria: [
-          "Very weak technical structure with significant downside risk",
-          "Weak technical structure",
-          "Neutral or mixed technical structure",
-          "Strong technical structure",
-          "Very strong technical structure with outstanding momentum and support",
+          "Unsustainable dividend or significant risk of dividend reduction / no dividends",
+          "Weak dividend safety with elevated payout ratio or strained cash flow",
+          "Acceptable dividend profile with moderate yield and reasonable coverage",
+          "Strong and sustainable dividend backed by solid earnings and cash flow",
+          "Exceptional dividend profile with high yield, strong coverage, and growth potential",
         ],
       },
-      entry_attractiveness: {
+      entry_timing: {
         type: "score",
         instructions:
-          "Assess the attractiveness of entering or accumulating a position at the current price or near immediate support.",
+          "As a secondary consideration after fundamental quality and business strength, evaluate whether current market price structure and support zones offer an advantageous entry timing or accumulation price for initiating or adding to a long-term position.",
         criteria: [
-          "Very low entry attractiveness with elevated risk",
-          "Low entry attractiveness with limited margin of safety",
-          "Moderate entry attractiveness requiring selective sizing",
-          "Attractive entry opportunity with solid downside buffer",
-          "Very attractive entry opportunity with strong risk-reward asymmetry",
+          "Unfavorable entry timing; price is extended or near major overhead resistance",
+          "Below-average entry timing; prefer waiting for consolidation or retracement",
+          "Neutral entry timing; acceptable for initial gradual accumulation",
+          "Favorable entry timing near solid support or accumulation zone",
+          "Optimal entry timing at major historical support with asymmetric long-term risk-reward",
         ],
       },
     },

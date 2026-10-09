@@ -68,8 +68,15 @@ export interface JevDecisionResult {
   confidence?: number | null; // 0 - 100 percentage
   probabilities?: JevProbabilities | null;
   scores?: {
-    fundamentalQuality?: JevScoreResult | null;
+    investmentPotential?: JevScoreResult | null;
+    financialQuality?: JevScoreResult | null;
+    growthPotential?: JevScoreResult | null;
+    profitabilityQuality?: JevScoreResult | null;
     valuationAttractiveness?: JevScoreResult | null;
+    dividendSustainability?: JevScoreResult | null;
+    entryTiming?: JevScoreResult | null;
+    // Backwards-compatible aliases
+    fundamentalQuality?: JevScoreResult | null;
     technicalAttractiveness?: JevScoreResult | null;
     entryAttractiveness?: JevScoreResult | null;
   };
@@ -86,19 +93,61 @@ export interface JevDecisionResult {
 }
 
 const SCORE_CRITERIA_MAP = {
+  investment_potential: [
+    "Very poor investment potential with significant structural or financial weaknesses",
+    "Weak investment potential with limited growth or important risks",
+    "Average investment potential with a mixture of strengths and weaknesses",
+    "Strong investment potential supported by good business and financial fundamentals",
+    "Excellent investment potential supported by strong financial quality, sustainable growth and attractive future prospects",
+  ],
+  financial_quality: [
+    "Very weak financial quality",
+    "Weak financial quality",
+    "Acceptable financial quality",
+    "Strong financial quality",
+    "Excellent financial quality",
+  ],
+  growth_potential: [
+    "Very weak growth potential or declining business",
+    "Limited growth potential",
+    "Moderate growth potential",
+    "Strong growth potential",
+    "Excellent sustainable long-term growth potential",
+  ],
+  profitability_quality: [
+    "Very weak profitability or structural losses",
+    "Weak profitability with low margins or volatile earnings",
+    "Acceptable profitability with stable but modest margins",
+    "Strong and consistent profitability",
+    "Exceptional profitability with high and sustainable margins",
+  ],
+  valuation_attractiveness: [
+    "Very unattractive valuation or clearly overvalued relative to long-term fundamentals",
+    "Unattractive valuation with limited margin of safety",
+    "Fairly valued relative to fundamentals and earnings quality",
+    "Attractive valuation offering a solid margin of safety for long-term holding",
+    "Highly attractive valuation offering strong long-term upside and safety margin",
+  ],
+  dividend_sustainability: [
+    "Unsustainable dividend or significant risk of dividend reduction / no dividends",
+    "Weak dividend safety with elevated payout ratio or strained cash flow",
+    "Acceptable dividend profile with moderate yield and reasonable coverage",
+    "Strong and sustainable dividend backed by solid earnings and cash flow",
+    "Exceptional dividend profile with high yield, strong coverage, and growth potential",
+  ],
+  entry_timing: [
+    "Unfavorable entry timing; price is extended or near major overhead resistance",
+    "Below-average entry timing; prefer waiting for consolidation or retracement",
+    "Neutral entry timing; acceptable for initial gradual accumulation",
+    "Favorable entry timing near solid support or accumulation zone",
+    "Optimal entry timing at major historical support with asymmetric long-term risk-reward",
+  ],
   fundamental_quality: [
     "Very weak fundamentals with significant deterioration or financial weakness",
     "Weak fundamentals with several important concerns",
     "Mixed or average fundamentals with both strengths and weaknesses",
     "Strong fundamentals with healthy profitability, balance sheet, and financial trends",
     "Excellent fundamentals with consistently strong profitability, cash generation, balance sheet quality, and historical improvement",
-  ],
-  valuation_attractiveness: [
-    "Very unattractive valuation or clearly overvalued relative to available evidence",
-    "Unattractive valuation with limited margin of safety",
-    "Approximately fairly valued or valuation evidence is mixed",
-    "Attractive valuation with a reasonable margin of safety",
-    "Very attractive valuation with strong evidence of undervaluation and favorable fundamentals",
   ],
   technical_attractiveness: [
     "Very weak technical structure with significant downside risk",
@@ -289,28 +338,55 @@ export async function analyzeWithJev(
         }
       }
 
-      // Parse Score Questions
+      // Parse Score Questions (Long-Term Investment Potential)
+      const investmentPotential = parseScoreAnswer(
+        answers.investment_potential,
+        SCORE_CRITERIA_MAP.investment_potential,
+        confidence
+      );
+      const financialQuality = parseScoreAnswer(
+        answers.financial_quality || answers.fundamental_quality,
+        SCORE_CRITERIA_MAP.financial_quality,
+        confidence
+      );
+      const growthPotential = parseScoreAnswer(
+        answers.growth_potential,
+        SCORE_CRITERIA_MAP.growth_potential,
+        confidence
+      );
+      const profitabilityQuality = parseScoreAnswer(
+        answers.profitability_quality,
+        SCORE_CRITERIA_MAP.profitability_quality,
+        confidence
+      );
+      const valuationAttractiveness = parseScoreAnswer(
+        answers.valuation_attractiveness,
+        SCORE_CRITERIA_MAP.valuation_attractiveness,
+        confidence
+      );
+      const dividendSustainability = parseScoreAnswer(
+        answers.dividend_sustainability,
+        SCORE_CRITERIA_MAP.dividend_sustainability,
+        confidence
+      );
+      const entryTiming = parseScoreAnswer(
+        answers.entry_timing || answers.entry_attractiveness || answers.technical_attractiveness,
+        SCORE_CRITERIA_MAP.entry_timing,
+        confidence
+      );
+
       const scores = {
-        fundamentalQuality: parseScoreAnswer(
-          answers.fundamental_quality,
-          SCORE_CRITERIA_MAP.fundamental_quality,
-          confidence
-        ),
-        valuationAttractiveness: parseScoreAnswer(
-          answers.valuation_attractiveness,
-          SCORE_CRITERIA_MAP.valuation_attractiveness,
-          confidence
-        ),
-        technicalAttractiveness: parseScoreAnswer(
-          answers.technical_attractiveness,
-          SCORE_CRITERIA_MAP.technical_attractiveness,
-          confidence
-        ),
-        entryAttractiveness: parseScoreAnswer(
-          answers.entry_attractiveness,
-          SCORE_CRITERIA_MAP.entry_attractiveness,
-          confidence
-        ),
+        investmentPotential,
+        financialQuality,
+        growthPotential,
+        profitabilityQuality,
+        valuationAttractiveness,
+        dividendSustainability,
+        entryTiming,
+        // Backward-compatible aliases
+        fundamentalQuality: financialQuality || investmentPotential,
+        technicalAttractiveness: entryTiming,
+        entryAttractiveness: entryTiming,
       };
 
       return {

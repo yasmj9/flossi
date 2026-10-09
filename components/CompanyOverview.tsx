@@ -57,8 +57,14 @@ interface AnalysisResponse {
     [key: string]: number | undefined;
   } | null;
   scores?: {
-    fundamentalQuality?: JevScoreResult | null;
+    investmentPotential?: JevScoreResult | null;
+    financialQuality?: JevScoreResult | null;
+    growthPotential?: JevScoreResult | null;
+    profitabilityQuality?: JevScoreResult | null;
     valuationAttractiveness?: JevScoreResult | null;
+    dividendSustainability?: JevScoreResult | null;
+    entryTiming?: JevScoreResult | null;
+    fundamentalQuality?: JevScoreResult | null;
     technicalAttractiveness?: JevScoreResult | null;
     entryAttractiveness?: JevScoreResult | null;
   } | null;
@@ -512,17 +518,17 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
               </div>
             </div>
 
-            {/* JEV AI Investment Judgment Section */}
+            {/* JEV AI Long-Term Investment Judgment Section */}
             <div className="pt-6 border-t border-zinc-100">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
+              <div className="mb-4">
+                <div className="flex items-center gap-2">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                    JEV AI Investment Judgment
+                    Medium-to-Long-Term Investment Evaluation
                   </h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">
-                    Evaluation based on company fundamentals, valuation, technicals, and five-year ratios.
-                  </p>
                 </div>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Answering: <span className="font-medium text-zinc-700">&ldquo;Is this company attractive as a medium-to-long-term investment?&rdquo;</span> Primary focus is company quality, financial strength, profitability, sustainable growth, dividends, and valuation. Technical levels are secondary for entry timing.
+                </p>
               </div>
 
               {/* Decision & Confidence Strip */}
@@ -530,7 +536,7 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
                 {/* Decision */}
                 <div className="p-5 border border-zinc-200 rounded-xl bg-white flex flex-col justify-between">
                   <span className="text-xs font-medium text-zinc-500 block">
-                    Investment Decision
+                    Long-Term Investment Decision
                   </span>
                   <div className="mt-2">
                     <span
@@ -546,14 +552,14 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
                     </span>
                   </div>
                   <span className="text-[11px] text-zinc-500 mt-2 block">
-                    Model: jev-latest
+                    Horizon: Medium-to-Long-Term · Model: jev-latest
                   </span>
                 </div>
 
                 {/* Confidence */}
                 <div className="p-5 border border-zinc-200 rounded-xl bg-white flex flex-col justify-between">
                   <span className="text-xs font-medium text-zinc-500 block">
-                    Confidence
+                    Confidence Level
                   </span>
                   <div className="mt-2">
                     <span className="font-mono text-3xl font-bold text-zinc-900 tabular-nums">
@@ -563,7 +569,7 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
                     </span>
                   </div>
                   <span className="text-[11px] text-zinc-500 mt-2 block">
-                    Judgment confidence level
+                    Judgment confidence on available evidence
                   </span>
                 </div>
 
@@ -599,88 +605,153 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
                     </div>
                   </div>
                   <span className="text-[11px] text-zinc-500 mt-2 block">
-                    Probability distribution
+                    Long-term probability distribution
                   </span>
                 </div>
               </div>
 
-              {/* JEV Analysis Scores (from JEV quickstart score questions) */}
+              {/* Long-Term Analysis Dimensions (Primary Fundamental Pillars + Secondary Timing) */}
               {data.scores && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {/* Fundamental Quality */}
-                  <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-medium text-zinc-500">
-                        Fundamental Quality
-                      </span>
-                      {data.scores.fundamentalQuality?.score !== null &&
-                        data.scores.fundamentalQuality?.score !== undefined && (
-                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.fundamentalQuality.score}/5
-                          </span>
-                        )}
-                    </div>
-                    <p className="text-xs text-zinc-700 leading-snug">
-                      {data.scores.fundamentalQuality?.label ||
-                        "Assessment based on balance sheet, income, and cash flow."}
-                    </p>
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                      Primary Long-Term Pillars
+                    </h3>
                   </div>
 
-                  {/* Valuation Attractiveness */}
-                  <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-medium text-zinc-500">
-                        Valuation Attractiveness
-                      </span>
-                      {data.scores.valuationAttractiveness?.score !== null &&
-                        data.scores.valuationAttractiveness?.score !== undefined && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {/* 1. Long-Term Investment Potential */}
+                    <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-zinc-700">
+                          Investment Potential
+                        </span>
+                        {(data.scores.investmentPotential?.score ?? null) !== null && (
                           <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.valuationAttractiveness.score}/5
+                            {data.scores.investmentPotential?.score}/5
                           </span>
                         )}
+                      </div>
+                      <p className="text-xs text-zinc-600 leading-snug">
+                        {data.scores.investmentPotential?.label ||
+                          "Overall quality, financial fundamentals, and long-term business potential."}
+                      </p>
                     </div>
-                    <p className="text-xs text-zinc-700 leading-snug">
-                      {data.scores.valuationAttractiveness?.label ||
-                        "Assessment based on current and 5-year PER, EPS, and yield."}
-                    </p>
+
+                    {/* 2. Financial Quality */}
+                    <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-zinc-700">
+                          Financial Strength & Balance Sheet
+                        </span>
+                        {(data.scores.financialQuality?.score ?? data.scores.fundamentalQuality?.score ?? null) !== null && (
+                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
+                            {data.scores.financialQuality?.score ?? data.scores.fundamentalQuality?.score}/5
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-600 leading-snug">
+                        {data.scores.financialQuality?.label ?? data.scores.fundamentalQuality?.label ??
+                          "Balance sheet quality, debt levels, equity, and liquidity cushions."}
+                      </p>
+                    </div>
+
+                    {/* 3. Growth Potential */}
+                    <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-zinc-700">
+                          Sustainable Growth & Value Creation
+                        </span>
+                        {(data.scores.growthPotential?.score ?? null) !== null && (
+                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
+                            {data.scores.growthPotential?.score}/5
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-600 leading-snug">
+                        {data.scores.growthPotential?.label ||
+                          "Revenue growth, earnings momentum, EPS evolution, and business outlook."}
+                      </p>
+                    </div>
+
+                    {/* 4. Profitability Quality */}
+                    <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-zinc-700">
+                          Profitability & Margins
+                        </span>
+                        {(data.scores.profitabilityQuality?.score ?? null) !== null && (
+                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
+                            {data.scores.profitabilityQuality?.score}/5
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-600 leading-snug">
+                        {data.scores.profitabilityQuality?.label ||
+                          "Operating margins, ROE sustainability, earnings stability, and competitive strength."}
+                      </p>
+                    </div>
+
+                    {/* 5. Valuation Attractiveness */}
+                    <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-zinc-700">
+                          Valuation & Margin of Safety
+                        </span>
+                        {(data.scores.valuationAttractiveness?.score ?? null) !== null && (
+                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
+                            {data.scores.valuationAttractiveness?.score}/5
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-600 leading-snug">
+                        {data.scores.valuationAttractiveness?.label ||
+                          "Long-term valuation multiple comparison (Current vs 5-Yr PER, EPS, Yield)."}
+                      </p>
+                    </div>
+
+                    {/* 6. Dividend Sustainability */}
+                    <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-zinc-700">
+                          Dividends & Shareholder Returns
+                        </span>
+                        {(data.scores.dividendSustainability?.score ?? null) !== null && (
+                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
+                            {data.scores.dividendSustainability?.score}/5
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-600 leading-snug">
+                        {data.scores.dividendSustainability?.label ||
+                          "Dividend yield safety, payout ratio coverage, and cash distribution sustainability."}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Technical Attractiveness */}
-                  <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-medium text-zinc-500">
-                        Technical Structure
-                      </span>
-                      {data.scores.technicalAttractiveness?.score !== null &&
-                        data.scores.technicalAttractiveness?.score !== undefined && (
-                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.technicalAttractiveness.score}/5
+                  {/* Secondary Pillar: Technical Entry Timing */}
+                  <div className="pt-2">
+                    <div className="p-4 border border-zinc-200/80 rounded-xl bg-zinc-50/50 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-semibold text-zinc-700">
+                            Entry Timing & Structure
+                          </span>
+                          <span className="text-[10px] font-semibold uppercase px-1.5 py-0.2 rounded bg-zinc-200 text-zinc-700">
+                            Secondary
+                          </span>
+                        </div>
+                        {(data.scores.entryTiming?.score ?? data.scores.entryAttractiveness?.score ?? null) !== null && (
+                          <span className="font-mono text-xs font-bold text-zinc-800 px-1.5 py-0.5 rounded bg-white border border-zinc-200">
+                            {data.scores.entryTiming?.score ?? data.scores.entryAttractiveness?.score}/5
                           </span>
                         )}
+                      </div>
+                      <p className="text-xs text-zinc-600 leading-snug">
+                        {data.scores.entryTiming?.label ?? data.scores.entryAttractiveness?.label ??
+                          "Secondary technical assessment used to identify optimal entry or accumulation levels, without overriding fundamental business merits."}
+                      </p>
                     </div>
-                    <p className="text-xs text-zinc-700 leading-snug">
-                      {data.scores.technicalAttractiveness?.label ||
-                        "Assessment based on trend, support, resistance, and momentum."}
-                    </p>
-                  </div>
-
-                  {/* Entry Attractiveness */}
-                  <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-medium text-zinc-500">
-                        Entry Attractiveness
-                      </span>
-                      {data.scores.entryAttractiveness?.score !== null &&
-                        data.scores.entryAttractiveness?.score !== undefined && (
-                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.entryAttractiveness.score}/5
-                          </span>
-                        )}
-                    </div>
-                    <p className="text-xs text-zinc-700 leading-snug">
-                      {data.scores.entryAttractiveness?.label ||
-                        "Assessment of position opening risk-reward at current levels."}
-                    </p>
                   </div>
                 </div>
               )}
