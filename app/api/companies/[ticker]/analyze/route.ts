@@ -252,6 +252,7 @@ export async function POST(
       jevConfidence: jevResult.confidence,
       probabilities: jevResult.probabilities || null,
       scores: jevResult.scores || null,
+      jevValuation: jevResult.valuation || null,
       ficheEmetteur: companyData.ficheEmetteur || null,
       dataUsedForAnalysis: quickstartPayload,
     });

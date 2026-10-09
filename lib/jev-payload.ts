@@ -105,49 +105,38 @@ export interface JevQuickstartPayload {
   state: string; // JSON stringified JevStructuredState
   model: "jev-latest";
   questions: {
+    financial_reports_quality: {
+      type: "score";
+      instructions: string;
+      criteria: string[];
+    };
+    five_year_indicators: {
+      type: "score";
+      instructions: string;
+      criteria: string[];
+    };
+    valuation: {
+      type: "choice";
+      instructions: string;
+      criteria: {
+        UNDERVALUED: string;
+        FAIRLY_VALUED: string;
+        OVERVALUED: string;
+      };
+    };
+    technical_structure: {
+      type: "score";
+      instructions: string;
+      criteria: string[];
+    };
     investment_decision: {
       type: "choice";
       instructions: string;
       criteria: {
         BUY: string;
         HOLD: string;
-        SELL: string;
+        AVOID: string;
       };
-    };
-    investment_potential: {
-      type: "score";
-      instructions: string;
-      criteria: string[];
-    };
-    financial_quality: {
-      type: "score";
-      instructions: string;
-      criteria: string[];
-    };
-    growth_potential: {
-      type: "score";
-      instructions: string;
-      criteria: string[];
-    };
-    profitability_quality: {
-      type: "score";
-      instructions: string;
-      criteria: string[];
-    };
-    valuation_attractiveness: {
-      type: "score";
-      instructions: string;
-      criteria: string[];
-    };
-    dividend_sustainability: {
-      type: "score";
-      instructions: string;
-      criteria: string[];
-    };
-    entry_timing: {
-      type: "score";
-      instructions: string;
-      criteria: string[];
     };
   };
 }
@@ -303,99 +292,61 @@ export function buildJevQuickstartPayload(
     state: JSON.stringify(structuredState),
     model: "jev-latest",
     questions: {
+      financial_reports_quality: {
+        type: "score",
+        instructions:
+          "Evaluate the company's financial evolution using the available annual, semester and quarterly reports, including Bilan, CPC and Trésorerie.",
+        criteria: [
+          "Very weak financial evolution",
+          "Weak financial evolution",
+          "Mixed or stable financial evolution",
+          "Good financial evolution",
+          "Very strong financial evolution",
+        ],
+      },
+      five_year_indicators: {
+        type: "score",
+        instructions:
+          "Evaluate the five-year evolution and latest values of BPA / EPS, ROE %, Payout Ratio %, Dividend Yield % and PER / P/E.",
+        criteria: [
+          "Very poor five-year indicators",
+          "Weak five-year indicators",
+          "Average five-year indicators",
+          "Strong five-year indicators",
+          "Excellent five-year indicators",
+        ],
+      },
+      valuation: {
+        type: "choice",
+        instructions:
+          "Based on the company's financial information, current price, historical valuation and five-year indicators, is the stock currently undervalued, fairly valued or overvalued?",
+        criteria: {
+          UNDERVALUED: "The stock price is below intrinsic / historical fair value, offering an attractive margin of safety.",
+          FAIRLY_VALUED: "The stock price is in line with fundamentals and historical valuation multiples.",
+          OVERVALUED: "The stock price is elevated compared with fundamentals, historical multiples and indicators.",
+        },
+      },
+      technical_structure: {
+        type: "score",
+        instructions:
+          "Evaluate the technical structure using trend, support, resistance, breakout, retest when relevant and volume confirmation when available.",
+        criteria: [
+          "Very weak technical structure",
+          "Weak technical structure",
+          "Neutral or rangebound technical structure",
+          "Favorable technical structure",
+          "Very strong technical structure with strong confirmation",
+        ],
+      },
       investment_decision: {
         type: "choice",
         instructions:
-          "Based on the comprehensive medium-to-long-term evaluation of company business quality, financial strength, profitability, sustainable growth, dividend safety, and valuation (with technical entry timing as secondary), what is the most appropriate long-term investment decision right now? Consider a medium-to-long-term horizon. Do not assume missing information is positive.",
+          "Synthesize the financial reports evolution, five-year indicators, valuation, technical structure and recent company news according to Zouhair's Casabourse methodology. What is the investment decision?",
         criteria: {
-          BUY: "The available evidence supports strong long-term investment potential with sound financials, sustainable profitability, acceptable valuation, and favorable medium-to-long-term prospects.",
-          HOLD: "The evidence shows acceptable or average long-term potential, fair valuation, or mixed fundamentals not attractive enough for new aggressive capital, but does not justify selling.",
-          SELL: "The available evidence shows structural weaknesses, deterioration in profitability or financial strength, excessive valuation, or high long-term risks justifying avoiding or reducing the position.",
+          BUY: "Solid financial reports, sound five-year indicators, reasonable or undervalued price, and supportive or constructive technical structure.",
+          HOLD: "Mixed or stable financial performance, fair valuation, or awaiting clearer technical confirmation or better entry price.",
+          AVOID: "Deteriorating financial reports, poor five-year indicators, excessive valuation, or unfavorable technical breakdown.",
         },
-      },
-      investment_potential: {
-        type: "score",
-        instructions:
-          "Evaluate the company's long-term investment potential based on its business quality, financial performance, profitability, growth, balance sheet, cash generation, shareholder returns, valuation and future prospects. Focus on the company as an investment, not short-term trading movements.",
-        criteria: [
-          "Very poor investment potential with significant structural or financial weaknesses",
-          "Weak investment potential with limited growth or important risks",
-          "Average investment potential with a mixture of strengths and weaknesses",
-          "Strong investment potential supported by good business and financial fundamentals",
-          "Excellent investment potential supported by strong financial quality, sustainable growth and attractive future prospects",
-        ],
-      },
-      financial_quality: {
-        type: "score",
-        instructions:
-          "Evaluate the overall financial quality of the company using the balance sheet, debt, equity, profitability, cash position and cash flow.",
-        criteria: [
-          "Very weak financial quality",
-          "Weak financial quality",
-          "Acceptable financial quality",
-          "Strong financial quality",
-          "Excellent financial quality",
-        ],
-      },
-      growth_potential: {
-        type: "score",
-        instructions:
-          "Evaluate the company's ability to grow its business and shareholder value over the coming years. Consider revenue growth, earnings growth, EPS evolution, ROE evolution, investments, business expansion and relevant company news.",
-        criteria: [
-          "Very weak growth potential or declining business",
-          "Limited growth potential",
-          "Moderate growth potential",
-          "Strong growth potential",
-          "Excellent sustainable long-term growth potential",
-        ],
-      },
-      profitability_quality: {
-        type: "score",
-        instructions:
-          "Evaluate the quality and sustainability of the company's profitability. Consider operating margins, net margin, return on equity (ROE) evolution, earnings consistency, and competitive strength.",
-        criteria: [
-          "Very weak profitability or structural losses",
-          "Weak profitability with low margins or volatile earnings",
-          "Acceptable profitability with stable but modest margins",
-          "Strong and consistent profitability",
-          "Exceptional profitability with high and sustainable margins",
-        ],
-      },
-      valuation_attractiveness: {
-        type: "score",
-        instructions:
-          "Evaluate the company's valuation from a long-term investment perspective using PER, five-year average PER, EPS trend, ROE, dividend yield, and growth outlook. Do not treat low multiples alone as sufficient evidence of undervaluation.",
-        criteria: [
-          "Very unattractive valuation or clearly overvalued relative to long-term fundamentals",
-          "Unattractive valuation with limited margin of safety",
-          "Fairly valued relative to fundamentals and earnings quality",
-          "Attractive valuation offering a solid margin of safety for long-term holding",
-          "Highly attractive valuation offering strong long-term upside and safety margin",
-        ],
-      },
-      dividend_sustainability: {
-        type: "score",
-        instructions:
-          "Evaluate the sustainability, safety, and attractiveness of the company's dividends and shareholder returns. Consider dividend yield, payout ratio, cash generation, balance sheet cushion, and historical track record.",
-        criteria: [
-          "Unsustainable dividend or significant risk of dividend reduction / no dividends",
-          "Weak dividend safety with elevated payout ratio or strained cash flow",
-          "Acceptable dividend profile with moderate yield and reasonable coverage",
-          "Strong and sustainable dividend backed by solid earnings and cash flow",
-          "Exceptional dividend profile with high yield, strong coverage, and growth potential",
-        ],
-      },
-      entry_timing: {
-        type: "score",
-        instructions:
-          "As a secondary consideration after fundamental quality and business strength, evaluate whether current market price structure and support zones offer an advantageous entry timing or accumulation price for initiating or adding to a long-term position.",
-        criteria: [
-          "Unfavorable entry timing; price is extended or near major overhead resistance",
-          "Below-average entry timing; prefer waiting for consolidation or retracement",
-          "Neutral entry timing; acceptable for initial gradual accumulation",
-          "Favorable entry timing near solid support or accumulation zone",
-          "Optimal entry timing at major historical support with asymmetric long-term risk-reward",
-        ],
       },
     },
   };

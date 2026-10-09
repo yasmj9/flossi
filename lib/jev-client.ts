@@ -19,8 +19,10 @@ export type ValuationStatus = "UNDERVALUED" | "FAIRLY_VALUED" | "OVERVALUED";
 
 export interface JevValuationResult {
   valuation: ValuationStatus;
+  assessment?: "undervalued" | "fairly_valued" | "overvalued";
   confidence: number | null; // 0 - 100 percentage
-  keyReasons: string[];
+  keyReasons?: string[];
+  reason?: string;
 }
 
 export type TechnicalAttractiveness =
@@ -64,10 +66,15 @@ export interface JevEntryOpportunity {
 
 export interface JevDecisionResult {
   status: "success" | "jev_not_configured" | "jev_error";
-  decision?: "BUY" | "HOLD" | "SELL" | string | null;
+  decision?: "BUY" | "HOLD" | "AVOID" | "SELL" | string | null;
   confidence?: number | null; // 0 - 100 percentage
   probabilities?: JevProbabilities | null;
   scores?: {
+    // Zouhair Achbakou Casabourse Methodology Pillars
+    financialReportsQuality?: JevScoreResult | null;
+    fiveYearIndicators?: JevScoreResult | null;
+    technicalStructure?: JevScoreResult | null;
+    // Backward-compatible aliases
     investmentPotential?: JevScoreResult | null;
     financialQuality?: JevScoreResult | null;
     growthPotential?: JevScoreResult | null;
@@ -75,7 +82,6 @@ export interface JevDecisionResult {
     valuationAttractiveness?: JevScoreResult | null;
     dividendSustainability?: JevScoreResult | null;
     entryTiming?: JevScoreResult | null;
-    // Backwards-compatible aliases
     fundamentalQuality?: JevScoreResult | null;
     technicalAttractiveness?: JevScoreResult | null;
     entryAttractiveness?: JevScoreResult | null;
@@ -93,6 +99,27 @@ export interface JevDecisionResult {
 }
 
 const SCORE_CRITERIA_MAP = {
+  financial_reports_quality: [
+    "Very weak financial evolution",
+    "Weak financial evolution",
+    "Mixed or stable financial evolution",
+    "Good financial evolution",
+    "Very strong financial evolution",
+  ],
+  five_year_indicators: [
+    "Very poor five-year indicators",
+    "Weak five-year indicators",
+    "Average five-year indicators",
+    "Strong five-year indicators",
+    "Excellent five-year indicators",
+  ],
+  technical_structure: [
+    "Very weak technical structure",
+    "Weak technical structure",
+    "Neutral or rangebound technical structure",
+    "Favorable technical structure",
+    "Very strong technical structure with strong confirmation",
+  ],
   investment_potential: [
     "Very poor investment potential with significant structural or financial weaknesses",
     "Weak investment potential with limited growth or important risks",
@@ -338,15 +365,64 @@ export async function analyzeWithJev(
         }
       }
 
-      // Parse Score Questions (Long-Term Investment Potential)
+      // Parse Zouhair Achbakou Casabourse Questions
+      const financialReportsQuality = parseScoreAnswer(
+        answers.financial_reports_quality || answers.financial_quality || answers.fundamental_quality,
+        SCORE_CRITERIA_MAP.financial_reports_quality,
+        confidence
+      );
+
+      const fiveYearIndicatorsScore = parseScoreAnswer(
+        answers.five_year_indicators || answers.profitability_quality || answers.dividend_sustainability,
+        SCORE_CRITERIA_MAP.five_year_indicators,
+        confidence
+      );
+
+      const technicalStructureScore = parseScoreAnswer(
+        answers.technical_structure || answers.entry_timing || answers.technical_attractiveness,
+        SCORE_CRITERIA_MAP.technical_structure,
+        confidence
+      );
+
+      // Parse Valuation Choice (UNDERVALUED | FAIRLY_VALUED | OVERVALUED)
+      let parsedValuation: JevValuationResult | null = null;
+      const rawValuation = answers.valuation;
+      if (rawValuation) {
+        let valChoice: "undervalued" | "fairly_valued" | "overvalued" = "fairly_valued";
+        let valConf = confidence;
+        let valReason = "";
+
+        if (typeof rawValuation === "string") {
+          const lower = rawValuation.toLowerCase();
+          if (lower.includes("under")) valChoice = "undervalued";
+          else if (lower.includes("over")) valChoice = "overvalued";
+          else valChoice = "fairly_valued";
+          valReason = rawValuation;
+        } else if (typeof rawValuation === "object") {
+          const vObj = rawValuation as Record<string, unknown>;
+          const cStr = ((vObj.choice as string) || (vObj.answer as string) || "").toLowerCase();
+          if (cStr.includes("under")) valChoice = "undervalued";
+          else if (cStr.includes("over")) valChoice = "overvalued";
+          else valChoice = "fairly_valued";
+
+          if (typeof vObj.confidence === "number") {
+            valConf = vObj.confidence <= 1.0 && vObj.confidence > 0 ? Math.round(vObj.confidence * 100) : Math.round(vObj.confidence);
+          }
+          valReason = (vObj.reason as string) || (vObj.explanation as string) || (vObj.criteria as string) || "";
+        }
+
+        parsedValuation = {
+          valuation: valChoice === "undervalued" ? "UNDERVALUED" : valChoice === "overvalued" ? "OVERVALUED" : "FAIRLY_VALUED",
+          assessment: valChoice,
+          confidence: valConf,
+          reason: valReason || `Stock assessed as ${valChoice.toUpperCase().replace("_", " ")} based on fundamentals and five-year indicators.`,
+        };
+      }
+
+      // Legacy score parsing for backward-compatibility
       const investmentPotential = parseScoreAnswer(
         answers.investment_potential,
         SCORE_CRITERIA_MAP.investment_potential,
-        confidence
-      );
-      const financialQuality = parseScoreAnswer(
-        answers.financial_quality || answers.fundamental_quality,
-        SCORE_CRITERIA_MAP.financial_quality,
         confidence
       );
       const growthPotential = parseScoreAnswer(
@@ -354,39 +430,28 @@ export async function analyzeWithJev(
         SCORE_CRITERIA_MAP.growth_potential,
         confidence
       );
-      const profitabilityQuality = parseScoreAnswer(
-        answers.profitability_quality,
-        SCORE_CRITERIA_MAP.profitability_quality,
-        confidence
-      );
       const valuationAttractiveness = parseScoreAnswer(
         answers.valuation_attractiveness,
         SCORE_CRITERIA_MAP.valuation_attractiveness,
         confidence
       );
-      const dividendSustainability = parseScoreAnswer(
-        answers.dividend_sustainability,
-        SCORE_CRITERIA_MAP.dividend_sustainability,
-        confidence
-      );
-      const entryTiming = parseScoreAnswer(
-        answers.entry_timing || answers.entry_attractiveness || answers.technical_attractiveness,
-        SCORE_CRITERIA_MAP.entry_timing,
-        confidence
-      );
 
       const scores = {
-        investmentPotential,
-        financialQuality,
-        growthPotential,
-        profitabilityQuality,
-        valuationAttractiveness,
-        dividendSustainability,
-        entryTiming,
+        // Zouhair Achbakou Casabourse Methodology
+        financialReportsQuality,
+        fiveYearIndicators: fiveYearIndicatorsScore,
+        technicalStructure: technicalStructureScore,
         // Backward-compatible aliases
-        fundamentalQuality: financialQuality || investmentPotential,
-        technicalAttractiveness: entryTiming,
-        entryAttractiveness: entryTiming,
+        investmentPotential: investmentPotential || financialReportsQuality,
+        financialQuality: financialReportsQuality,
+        growthPotential,
+        profitabilityQuality: fiveYearIndicatorsScore,
+        valuationAttractiveness,
+        dividendSustainability: fiveYearIndicatorsScore,
+        entryTiming: technicalStructureScore,
+        fundamentalQuality: financialReportsQuality,
+        technicalAttractiveness: technicalStructureScore,
+        entryAttractiveness: technicalStructureScore,
       };
 
       return {
@@ -395,6 +460,7 @@ export async function analyzeWithJev(
         confidence,
         probabilities,
         scores,
+        valuation: parsedValuation,
         rawResponse: data,
       };
     }

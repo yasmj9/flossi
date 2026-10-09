@@ -16,7 +16,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { CseCompany } from "@/lib/cse-companies";
-import { JevScoreResult } from "@/lib/jev-client";
+import { JevScoreResult, JevValuationResult } from "@/lib/jev-client";
 import { JevQuickstartPayload } from "@/lib/jev-payload";
 import { FicheEmetteurData } from "@/lib/fiche-emetteur";
 import { ImportPdfModal } from "./ImportPdfModal";
@@ -53,10 +53,16 @@ interface AnalysisResponse {
   probabilities?: {
     BUY?: number;
     HOLD?: number;
+    AVOID?: number;
     SELL?: number;
     [key: string]: number | undefined;
   } | null;
   scores?: {
+    // Zouhair Achbakou Casabourse Methodology
+    financialReportsQuality?: JevScoreResult | null;
+    fiveYearIndicators?: JevScoreResult | null;
+    technicalStructure?: JevScoreResult | null;
+    // Backward-compatible aliases
     investmentPotential?: JevScoreResult | null;
     financialQuality?: JevScoreResult | null;
     growthPotential?: JevScoreResult | null;
@@ -68,6 +74,7 @@ interface AnalysisResponse {
     technicalAttractiveness?: JevScoreResult | null;
     entryAttractiveness?: JevScoreResult | null;
   } | null;
+  jevValuation?: JevValuationResult | null;
   ficheEmetteur?: FicheEmetteurData | null;
   dataUsedForAnalysis?: JevQuickstartPayload | Record<string, unknown> | null;
   error?: string | null;
@@ -276,10 +283,10 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
     dividendYield: null,
   };
 
-  // Decision styling
+  // Decision styling (Zouhair Casabourse Methodology: BUY / HOLD / AVOID)
   const decision = data?.jevDecision?.toUpperCase() || null;
   const isBuy = decision === "BUY";
-  const isSell = decision === "SELL";
+  const isAvoid = decision === "AVOID" || decision === "SELL";
 
   return (
     <div className="w-full max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 bg-white min-h-screen">
@@ -518,32 +525,32 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
               </div>
             </div>
 
-            {/* JEV AI Long-Term Investment Judgment Section */}
+            {/* JEV AI Casabourse Investment Judgment Section (Zouhair Achbakou Methodology) */}
             <div className="pt-6 border-t border-zinc-100">
               <div className="mb-4">
                 <div className="flex items-center gap-2">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                    Medium-to-Long-Term Investment Evaluation
+                    Casabourse Investment Judgment (Zouhair Achbakou Methodology)
                   </h2>
                 </div>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  Answering: <span className="font-medium text-zinc-700">&ldquo;Is this company attractive as a medium-to-long-term investment?&rdquo;</span> Primary focus is company quality, financial strength, profitability, sustainable growth, dividends, and valuation. Technical levels are secondary for entry timing.
+                  Methodology synthesis based exclusively on 1. Technical analysis (trend, support, resistance, breakout, retest, volume), 2. Financial reports (annual, semester, quarterly), 3. Bilan (actif, passif, equity, debt), 4. CPC (revenue, operating result, net income, margins), 5. Trésorerie (cash flows, cash position), 6. Valuation (Undervalued / Fairly Valued / Overvalued), 7. Five-year indicators (BPA, ROE, Payout, Dividend Yield, PER), and 8. Recent relevant company news.
                 </p>
               </div>
 
-              {/* Decision & Confidence Strip */}
+              {/* Decision, Confidence & Valuation Strip */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Decision */}
+                {/* 1. Decision */}
                 <div className="p-5 border border-zinc-200 rounded-xl bg-white flex flex-col justify-between">
                   <span className="text-xs font-medium text-zinc-500 block">
-                    Long-Term Investment Decision
+                    Investment Decision
                   </span>
                   <div className="mt-2">
                     <span
                       className={`inline-block text-2xl font-mono font-bold px-3.5 py-1 rounded-md border ${
                         isBuy
                           ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : isSell
+                          : isAvoid
                           ? "bg-rose-50 text-rose-800 border-rose-300"
                           : "bg-zinc-100 text-zinc-800 border-zinc-300"
                       }`}
@@ -552,32 +559,47 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
                     </span>
                   </div>
                   <span className="text-[11px] text-zinc-500 mt-2 block">
-                    Horizon: Medium-to-Long-Term · Model: jev-latest
+                    Recommendation: BUY / HOLD / AVOID · Model: jev-latest
                   </span>
                 </div>
 
-                {/* Confidence */}
+                {/* 2. Valuation Assessment */}
                 <div className="p-5 border border-zinc-200 rounded-xl bg-white flex flex-col justify-between">
                   <span className="text-xs font-medium text-zinc-500 block">
-                    Confidence Level
+                    Valuation Assessment
                   </span>
                   <div className="mt-2">
-                    <span className="font-mono text-3xl font-bold text-zinc-900 tabular-nums">
-                      {data.jevConfidence !== null && data.jevConfidence !== undefined
-                        ? `${data.jevConfidence}%`
-                        : "—"}
+                    <span
+                      className={`inline-block text-lg font-mono font-bold px-3 py-1 rounded-md border ${
+                        data.jevValuation?.assessment === "undervalued"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                          : data.jevValuation?.assessment === "overvalued"
+                          ? "bg-rose-50 text-rose-800 border-rose-300"
+                          : "bg-zinc-100 text-zinc-800 border-zinc-300"
+                      }`}
+                    >
+                      {data.jevValuation?.assessment
+                        ? data.jevValuation.assessment.toUpperCase().replace("_", " ")
+                        : "FAIRLY VALUED"}
                     </span>
                   </div>
-                  <span className="text-[11px] text-zinc-500 mt-2 block">
-                    Judgment confidence on available evidence
+                  <span className="text-[11px] text-zinc-500 mt-2 block truncate">
+                    {data.jevValuation?.reason || "Based on financial reports, current price & 5-year PER / BPA."}
                   </span>
                 </div>
 
-                {/* Probabilities */}
+                {/* 3. Decision Probabilities & Confidence */}
                 <div className="p-5 border border-zinc-200 rounded-xl bg-white flex flex-col justify-between">
-                  <span className="text-xs font-medium text-zinc-500 block">
-                    Decision Probabilities
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-zinc-500 block">
+                      Probabilities & Confidence
+                    </span>
+                    {data.jevConfidence !== null && data.jevConfidence !== undefined && (
+                      <span className="font-mono text-xs font-bold text-zinc-700">
+                        {data.jevConfidence}% conf.
+                      </span>
+                    )}
+                  </div>
                   <div className="mt-2 flex items-center justify-between text-xs font-mono">
                     <div>
                       <span className="text-zinc-500 block text-[10px]">BUY</span>
@@ -598,158 +620,79 @@ export function CompanyOverview({ ticker }: CompanyOverviewProps) {
                       |
                     </span>
                     <div>
-                      <span className="text-zinc-500 block text-[10px]">SELL</span>
+                      <span className="text-zinc-500 block text-[10px]">AVOID</span>
                       <span className="font-bold text-zinc-900 text-base tabular-nums">
-                        {data.probabilities?.SELL ?? 0}%
+                        {data.probabilities?.AVOID ?? data.probabilities?.SELL ?? 0}%
                       </span>
                     </div>
                   </div>
                   <span className="text-[11px] text-zinc-500 mt-2 block">
-                    Long-term probability distribution
+                    JEV probability distribution on Casabourse methodology
                   </span>
                 </div>
               </div>
 
-              {/* Long-Term Analysis Dimensions (Primary Fundamental Pillars + Secondary Timing) */}
+              {/* Casabourse Methodology Evaluation Pillars */}
               {data.scores && (
                 <div className="mt-6 space-y-4">
                   <div>
                     <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-                      Primary Long-Term Pillars
+                      Casabourse Methodology Pillars (Zouhair Achbakou)
                     </h3>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {/* 1. Long-Term Investment Potential */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* 1. Financial Reports Quality (Bilan, CPC, Trésorerie) */}
                     <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-semibold text-zinc-700">
-                          Investment Potential
+                          Financial Reports (Bilan, CPC, Trésorerie)
                         </span>
-                        {(data.scores.investmentPotential?.score ?? null) !== null && (
+                        {(data.scores.financialReportsQuality?.score ?? data.scores.financialQuality?.score ?? null) !== null && (
                           <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.investmentPotential?.score}/5
+                            {data.scores.financialReportsQuality?.score ?? data.scores.financialQuality?.score}/5
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-zinc-600 leading-snug">
-                        {data.scores.investmentPotential?.label ||
-                          "Overall quality, financial fundamentals, and long-term business potential."}
+                        {data.scores.financialReportsQuality?.label ?? data.scores.financialQuality?.label ??
+                          "Evaluation of annual, semester and quarterly reports, including Bilan, CPC, Trésorerie and period-over-period evolution."}
                       </p>
                     </div>
 
-                    {/* 2. Financial Quality */}
+                    {/* 2. Five-Year Indicators Evolution */}
                     <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-semibold text-zinc-700">
-                          Financial Strength & Balance Sheet
+                          Five-Year Indicators
                         </span>
-                        {(data.scores.financialQuality?.score ?? data.scores.fundamentalQuality?.score ?? null) !== null && (
+                        {(data.scores.fiveYearIndicators?.score ?? data.scores.profitabilityQuality?.score ?? null) !== null && (
                           <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.financialQuality?.score ?? data.scores.fundamentalQuality?.score}/5
+                            {data.scores.fiveYearIndicators?.score ?? data.scores.profitabilityQuality?.score}/5
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-zinc-600 leading-snug">
-                        {data.scores.financialQuality?.label ?? data.scores.fundamentalQuality?.label ??
-                          "Balance sheet quality, debt levels, equity, and liquidity cushions."}
+                        {data.scores.fiveYearIndicators?.label ?? data.scores.profitabilityQuality?.label ??
+                          "5-year historical evolution and latest values of BPA / EPS, ROE %, Payout Ratio %, Dividend Yield %, and PER."}
                       </p>
                     </div>
 
-                    {/* 3. Growth Potential */}
+                    {/* 3. Technical Structure */}
                     <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-semibold text-zinc-700">
-                          Sustainable Growth & Value Creation
+                          Technical Analysis Structure
                         </span>
-                        {(data.scores.growthPotential?.score ?? null) !== null && (
+                        {(data.scores.technicalStructure?.score ?? data.scores.entryTiming?.score ?? null) !== null && (
                           <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.growthPotential?.score}/5
+                            {data.scores.technicalStructure?.score ?? data.scores.entryTiming?.score}/5
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-zinc-600 leading-snug">
-                        {data.scores.growthPotential?.label ||
-                          "Revenue growth, earnings momentum, EPS evolution, and business outlook."}
-                      </p>
-                    </div>
-
-                    {/* 4. Profitability Quality */}
-                    <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-zinc-700">
-                          Profitability & Margins
-                        </span>
-                        {(data.scores.profitabilityQuality?.score ?? null) !== null && (
-                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.profitabilityQuality?.score}/5
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-zinc-600 leading-snug">
-                        {data.scores.profitabilityQuality?.label ||
-                          "Operating margins, ROE sustainability, earnings stability, and competitive strength."}
-                      </p>
-                    </div>
-
-                    {/* 5. Valuation Attractiveness */}
-                    <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-zinc-700">
-                          Valuation & Margin of Safety
-                        </span>
-                        {(data.scores.valuationAttractiveness?.score ?? null) !== null && (
-                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.valuationAttractiveness?.score}/5
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-zinc-600 leading-snug">
-                        {data.scores.valuationAttractiveness?.label ||
-                          "Long-term valuation multiple comparison (Current vs 5-Yr PER, EPS, Yield)."}
-                      </p>
-                    </div>
-
-                    {/* 6. Dividend Sustainability */}
-                    <div className="p-4 border border-zinc-200 rounded-xl bg-white space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-zinc-700">
-                          Dividends & Shareholder Returns
-                        </span>
-                        {(data.scores.dividendSustainability?.score ?? null) !== null && (
-                          <span className="font-mono text-xs font-bold text-zinc-900 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
-                            {data.scores.dividendSustainability?.score}/5
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-zinc-600 leading-snug">
-                        {data.scores.dividendSustainability?.label ||
-                          "Dividend yield safety, payout ratio coverage, and cash distribution sustainability."}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Secondary Pillar: Technical Entry Timing */}
-                  <div className="pt-2">
-                    <div className="p-4 border border-zinc-200/80 rounded-xl bg-zinc-50/50 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-semibold text-zinc-700">
-                            Entry Timing & Structure
-                          </span>
-                          <span className="text-[10px] font-semibold uppercase px-1.5 py-0.2 rounded bg-zinc-200 text-zinc-700">
-                            Secondary
-                          </span>
-                        </div>
-                        {(data.scores.entryTiming?.score ?? data.scores.entryAttractiveness?.score ?? null) !== null && (
-                          <span className="font-mono text-xs font-bold text-zinc-800 px-1.5 py-0.5 rounded bg-white border border-zinc-200">
-                            {data.scores.entryTiming?.score ?? data.scores.entryAttractiveness?.score}/5
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-zinc-600 leading-snug">
-                        {data.scores.entryTiming?.label ?? data.scores.entryAttractiveness?.label ??
-                          "Secondary technical assessment used to identify optimal entry or accumulation levels, without overriding fundamental business merits."}
+                        {data.scores.technicalStructure?.label ?? data.scores.entryTiming?.label ??
+                          "Trend, support, resistance, breakout status, retest confirmation, and volume context."}
                       </p>
                     </div>
                   </div>
