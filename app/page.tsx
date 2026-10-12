@@ -13,7 +13,7 @@ import {
   CurrencyUnit,
   ReportType,
   StatementScope,
-  ShariahMethodology,
+  TriStateAnswer,
 } from '@/lib/types';
 import {
   loadChecklistData,
@@ -29,6 +29,7 @@ import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { HeaderActions } from '@/components/HeaderActions';
 import { SummaryCard } from '@/components/SummaryCard';
 import { FundamentalAnalysisDashboard } from '@/components/FundamentalAnalysisDashboard';
+import { ShariahScreeningSection } from '@/components/ShariahScreeningSection';
 import { Tooltip } from '@/components/Tooltip';
 
 const SECTORS = [
@@ -41,14 +42,6 @@ const SECTORS = [
   'Énergie',
   'Technologie',
   'Autre',
-];
-
-const SHARIAH_METHODOLOGIES: { label: string; value: ShariahMethodology }[] = [
-  { label: 'AAOIFI (Recommandé - seuil 30% actif)', value: 'AAOIFI' },
-  { label: 'FTSE Shariah (Seuil 33% capitalisation/actifs)', value: 'FTSE' },
-  { label: 'MSCI Islamic Index (Seuil 33,33% capitalisation)', value: 'MSCI' },
-  { label: 'S&P Shariah (Seuil 33% capitalisation boursière)', value: 'SP' },
-  { label: 'Autre méthodologie', value: 'Other' },
 ];
 
 export default function Home() {
@@ -96,6 +89,37 @@ export default function Home() {
       const newYears = [...prev.growth.years];
       newYears[index] = { ...newYears[index], [field]: val };
       const next = { ...prev, growth: { years: newYears } };
+      return next;
+    });
+  };
+
+  const handleShariahFieldChange = (field: string, val: unknown) => {
+    setData((prev) => {
+      const next = {
+        ...prev,
+        shariah: {
+          ...prev.shariah,
+          [field]: val,
+        },
+      };
+      saveChecklistData(next);
+      return next;
+    });
+  };
+
+  const handleActivityQuestionChange = (key: string, val: TriStateAnswer) => {
+    setData((prev) => {
+      const next = {
+        ...prev,
+        shariah: {
+          ...prev.shariah,
+          activityChecklist: {
+            ...prev.shariah.activityChecklist,
+            [key]: val,
+          },
+        },
+      };
+      saveChecklistData(next);
       return next;
     });
   };
@@ -204,8 +228,18 @@ export default function Home() {
       shariah: {
         businessActivity: 'Prestations de santé et soins hospitaliers privés',
         methodology: 'AAOIFI',
+        activityChecklist: {
+          isPrimaryActivityPermissible: 'yes',
+          operatesConventionalBanking: 'no',
+          operatesConventionalInsurance: 'no',
+          generatesGamblingRevenue: 'no',
+          generatesAlcoholRevenue: 'no',
+          operatesOtherProhibited: 'no',
+          hasMixedActivitiesRequiringAnalysis: 'no',
+        },
         interestBearingDebt: '1380',
         interestIncome: '1.2',
+        isInterestIncomeUnbundled: true,
         nonPermissibleIncome: '0',
         totalRevenue: '1907',
         cashAndInterestSecurities: '335',
@@ -1017,142 +1051,16 @@ export default function Home() {
           <CollapsibleSection
             id="sec-shariah"
             title="Section 7 — Conformité Shariah"
-            subtitle="Recueil des données pour le screening islamique (éthique d'activité & seuils d'endettement portant intérêt)"
+            subtitle="Filtrage qualitatif de l'activité éthique et respect des ratios financiers islamiques (Strict, AAOIFI, MSCI, FTSE)"
+            defaultOpen={true}
           >
-            <div className="flex flex-col gap-4 pt-2">
-              <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-lg text-xs text-amber-900 leading-relaxed">
-                <strong className="font-semibold">Note méthodologique importante :</strong> Cette section recueille
-                uniquement les données déclaratives nécessaires au filtrage Shariah. Aucune qualification automatique
-                de conformité n&apos;est attribuée à ce stade.
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4">
-                <div className="sm:col-span-2">
-                  <FormField
-                    id="shariah-activity"
-                    label="Activité principale de l'entreprise"
-                    value={data.shariah.businessActivity}
-                    onChange={(v) => handleFieldChange('shariah', 'businessActivity', v)}
-                    placeholder="ex : Exploitation de cliniques privées et prestations médicales"
-                    type="text"
-                    tooltip={TOOLTIPS.businessActivity}
-                  />
-                </div>
-
-                {/* Méthodologie */}
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-1.5 font-medium text-slate-700 text-xs">
-                    <label htmlFor="shariah-methodology">Méthodologie de screening</label>
-                    <Tooltip info={TOOLTIPS.methodology} />
-                  </div>
-                  <select
-                    id="shariah-methodology"
-                    value={data.shariah.methodology}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        'shariah',
-                        'methodology',
-                        e.target.value as ShariahMethodology
-                      )
-                    }
-                    className="px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-800"
-                  >
-                    {SHARIAH_METHODOLOGIES.map((m) => (
-                      <option key={m.value} value={m.value}>
-                        {m.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <FormField
-                  id="shariah-debt"
-                  label="Dettes portant intérêt"
-                  value={data.shariah.interestBearingDebt}
-                  onChange={(v) => handleFieldChange('shariah', 'interestBearingDebt', v)}
-                  placeholder="0.00"
-                  suffix={unitSuffix}
-                  type="number"
-                  tooltip={TOOLTIPS.shariahInterestBearingDebt}
-                />
-
-                <FormField
-                  id="shariah-interestIncome"
-                  label="Revenus d'intérêts perçus"
-                  value={data.shariah.interestIncome}
-                  onChange={(v) => handleFieldChange('shariah', 'interestIncome', v)}
-                  placeholder="0.00"
-                  suffix={unitSuffix}
-                  type="number"
-                  tooltip={TOOLTIPS.interestIncome}
-                />
-
-                <FormField
-                  id="shariah-nonPermissible"
-                  label="Autres revenus non conformes"
-                  value={data.shariah.nonPermissibleIncome}
-                  onChange={(v) => handleFieldChange('shariah', 'nonPermissibleIncome', v)}
-                  placeholder="0.00"
-                  suffix={unitSuffix}
-                  type="number"
-                  tooltip={TOOLTIPS.nonPermissibleIncome}
-                />
-
-                <FormField
-                  id="shariah-totalRev"
-                  label="Total des revenus"
-                  value={data.shariah.totalRevenue}
-                  onChange={(v) => handleFieldChange('shariah', 'totalRevenue', v)}
-                  placeholder="0.00"
-                  suffix={unitSuffix}
-                  type="number"
-                  tooltip={TOOLTIPS.totalRevenue}
-                />
-
-                <FormField
-                  id="shariah-cashSecurities"
-                  label="Trésorerie et placements financiers"
-                  value={data.shariah.cashAndInterestSecurities}
-                  onChange={(v) => handleFieldChange('shariah', 'cashAndInterestSecurities', v)}
-                  placeholder="0.00"
-                  suffix={unitSuffix}
-                  type="number"
-                  tooltip={TOOLTIPS.cashAndInterestSecurities}
-                />
-
-                <FormField
-                  id="shariah-receivables"
-                  label="Créances clients"
-                  value={data.shariah.receivables}
-                  onChange={(v) => handleFieldChange('shariah', 'receivables', v)}
-                  placeholder="0.00"
-                  suffix={unitSuffix}
-                  type="number"
-                  tooltip={TOOLTIPS.receivables}
-                />
-
-                <FormField
-                  id="shariah-assets"
-                  label="Actif total (bilan)"
-                  value={data.shariah.totalAssets}
-                  onChange={(v) => handleFieldChange('shariah', 'totalAssets', v)}
-                  placeholder="0.00"
-                  suffix={unitSuffix}
-                  type="number"
-                  tooltip={TOOLTIPS.shariahTotalAssets}
-                />
-
-                <FormField
-                  id="shariah-marketCap"
-                  label="Capitalisation boursière"
-                  value={data.shariah.marketCap}
-                  onChange={(v) => handleFieldChange('shariah', 'marketCap', v)}
-                  placeholder="0.00"
-                  suffix={unitSuffix}
-                  type="number"
-                  tooltip={TOOLTIPS.marketCap}
-                />
-              </div>
+            <div className="pt-2">
+              <ShariahScreeningSection
+                data={data}
+                unitSuffix={unitSuffix}
+                onChangeField={handleShariahFieldChange}
+                onChangeActivityQuestion={handleActivityQuestionChange}
+              />
             </div>
           </CollapsibleSection>
         </div>

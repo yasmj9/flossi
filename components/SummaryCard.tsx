@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { FinancialChecklistData } from '@/lib/types';
+import { METHODOLOGIES_CONFIG, performShariahScreening } from '@/lib/shariahScreening';
 
 interface SummaryCardProps {
   data: FinancialChecklistData;
@@ -9,6 +10,8 @@ interface SummaryCardProps {
 
 export function SummaryCard({ data }: SummaryCardProps) {
   const { stockInfo, periodInfo, growth, profitability, debtStability, cashFlow, valuation, shariah } = data;
+  const shariahReport = performShariahScreening(data, shariah.methodology);
+  const shariahConfig = METHODOLOGIES_CONFIG[shariah.methodology] || METHODOLOGIES_CONFIG.AAOIFI;
 
   const unitLabel =
     periodInfo.unit === 'billions'
@@ -176,8 +179,26 @@ export function SummaryCard({ data }: SummaryCardProps) {
             </span>
           </div>
           <div className="flex justify-between py-0.5">
-            <span className="text-slate-500">Norme de screening</span>
-            <span className="font-medium text-slate-900">{shariah.methodology}</span>
+            <span className="text-slate-500">Norme Shariah</span>
+            <span className="font-medium text-slate-900">{shariahConfig.shortName}</span>
+          </div>
+          <div className="flex justify-between py-0.5">
+            <span className="text-slate-500">Statut Shariah</span>
+            <span
+              className={`font-semibold ${
+                shariahReport.verdict === 'PASSED'
+                  ? 'text-emerald-700'
+                  : shariahReport.verdict === 'FAILED'
+                  ? 'text-rose-700'
+                  : 'text-amber-700'
+              }`}
+            >
+              {shariahReport.verdict === 'PASSED'
+                ? 'Conforme'
+                : shariahReport.verdict === 'FAILED'
+                ? 'Non conforme'
+                : 'Vérification requise'}
+            </span>
           </div>
         </div>
       </div>

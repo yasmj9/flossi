@@ -80,8 +80,18 @@ export const DEFAULT_CHECKLIST_DATA: FinancialChecklistData = {
   shariah: {
     businessActivity: '',
     methodology: 'AAOIFI',
+    activityChecklist: {
+      isPrimaryActivityPermissible: 'unknown',
+      operatesConventionalBanking: 'no',
+      operatesConventionalInsurance: 'no',
+      generatesGamblingRevenue: 'no',
+      generatesAlcoholRevenue: 'no',
+      operatesOtherProhibited: 'no',
+      hasMixedActivitiesRequiringAnalysis: 'no',
+    },
     interestBearingDebt: '',
     interestIncome: '',
+    isInterestIncomeUnbundled: true,
     nonPermissibleIncome: '',
     totalRevenue: '',
     cashAndInterestSecurities: '',
@@ -188,6 +198,10 @@ function mergeWithDefaults(incoming: Partial<FinancialChecklistData>): Financial
     shariah: {
       ...DEFAULT_CHECKLIST_DATA.shariah,
       ...(incoming.shariah || {}),
+      activityChecklist: {
+        ...DEFAULT_CHECKLIST_DATA.shariah.activityChecklist,
+        ...(incoming.shariah?.activityChecklist || {}),
+      },
     },
   };
 }

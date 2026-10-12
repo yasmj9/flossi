@@ -4,7 +4,27 @@ export type ReportType = 'annual' | 'semiannual';
 
 export type StatementScope = 'consolidated' | 'parent';
 
-export type ShariahMethodology = 'AAOIFI' | 'FTSE' | 'MSCI' | 'SP' | 'Other';
+export type ShariahMethodology =
+  | 'STRICT_NO_RIBA'
+  | 'AAOIFI'
+  | 'MSCI_ISLAMIC'
+  | 'FTSE_YASAAR'
+  | 'FTSE'
+  | 'MSCI'
+  | 'SP'
+  | 'Other';
+
+export type TriStateAnswer = 'yes' | 'no' | 'unknown';
+
+export interface ShariahBusinessActivityChecklist {
+  isPrimaryActivityPermissible: TriStateAnswer;
+  operatesConventionalBanking: TriStateAnswer;
+  operatesConventionalInsurance: TriStateAnswer;
+  generatesGamblingRevenue: TriStateAnswer;
+  generatesAlcoholRevenue: TriStateAnswer;
+  operatesOtherProhibited: TriStateAnswer;
+  hasMixedActivitiesRequiringAnalysis: TriStateAnswer;
+}
 
 export interface FinancialYearRow {
   year: string;
@@ -72,8 +92,10 @@ export interface FinancialChecklistData {
   shariah: {
     businessActivity: string;
     methodology: ShariahMethodology;
+    activityChecklist: ShariahBusinessActivityChecklist;
     interestBearingDebt: string;
     interestIncome: string;
+    isInterestIncomeUnbundled: boolean;
     nonPermissibleIncome: string;
     totalRevenue: string;
     cashAndInterestSecurities: string;

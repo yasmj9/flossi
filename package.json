@@ -6,7 +6,7 @@
     "dev": "next dev -p 3000 -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "test": "tsx lib/financialMath.test.ts",
+    "test": "tsx lib/financialMath.test.ts && tsx lib/shariahScreening.test.ts",
     "lint": "eslint"
   },
   "dependencies": {
