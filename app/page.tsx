@@ -30,6 +30,16 @@ import { HeaderActions } from '@/components/HeaderActions';
 import { SummaryCard } from '@/components/SummaryCard';
 import { FundamentalAnalysisDashboard } from '@/components/FundamentalAnalysisDashboard';
 import { ShariahScreeningSection } from '@/components/ShariahScreeningSection';
+import { FairValueCalculatorSection } from '@/components/FairValueCalculatorSection';
+import { InvestmentConfidenceSection } from '@/components/InvestmentConfidenceSection';
+import { calculateFullFairValueAnalysis } from '@/lib/fairValueCalculator';
+import {
+  computeCompanyQualityScore,
+  computeBuyThisMonthScore,
+  computeInvestmentDecision,
+} from '@/lib/confidenceScoringEngine';
+import { performShariahScreening } from '@/lib/shariahScreening';
+import { parseFinancialNumber } from '@/lib/financialMath';
 import { Tooltip } from '@/components/Tooltip';
 
 const SECTORS = [
@@ -54,6 +64,63 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const analysis = useMemo(() => computeFundamentalAnalysis(data), [data]);
+
+  const fairValueAnalysis = useMemo(
+    () =>
+      calculateFullFairValueAnalysis({
+        reportType: data.periodInfo.reportType,
+        statementScope: data.periodInfo.statementScope,
+        currentStockPriceRaw: data.stockInfo.currentPrice,
+        manualEPSRaw: data.stockInfo.eps,
+        calculatedEPSValue: analysis.profitability.calculatedEPS.value,
+        expectedGrowthRaw: data.valuation.expectedEarningsGrowth,
+        futurePeRatioRaw: data.valuation.futurePeRatio,
+        requiredReturnRateRaw: data.valuation.requiredReturnRate,
+        desiredMarginOfSafetyRaw: data.valuation.desiredMarginOfSafety,
+        investmentHorizonYearsRaw: data.valuation.investmentHorizonYears,
+        dividendPerShareRaw: data.stockInfo.dividendPerShare,
+        manualFairValueRaw: data.valuation.manualFairValue,
+        dividendMode: data.valuation.dividendMode || 'exclude',
+      }),
+    [data, analysis.profitability.calculatedEPS.value]
+  );
+
+  const shariahReport = useMemo(
+    () => performShariahScreening(data, data.shariah.methodology),
+    [data]
+  );
+
+  const confidenceReport = useMemo(() => {
+    const quality = computeCompanyQualityScore(data, analysis);
+    const buyMonth = computeBuyThisMonthScore(data, quality, fairValueAnalysis, shariahReport);
+    return computeInvestmentDecision(quality, buyMonth, fairValueAnalysis, shariahReport, data);
+  }, [data, analysis, fairValueAnalysis, shariahReport]);
+
+  const handleDividendModeChange = (mode: 'exclude' | 'include') => {
+    setData((prev) => {
+      const next = {
+        ...prev,
+        valuation: {
+          ...prev.valuation,
+          dividendMode: mode,
+        },
+      };
+      saveChecklistData(next);
+      return next;
+    });
+  };
+
+  const handleValuationParamChange = (
+    field:
+      | 'expectedEarningsGrowth'
+      | 'futurePeRatio'
+      | 'requiredReturnRate'
+      | 'desiredMarginOfSafety'
+      | 'investmentHorizonYears',
+    val: string
+  ) => {
+    handleFieldChange('valuation', field, val);
+  };
 
   // Load from localStorage on client mount
   useEffect(() => {
@@ -1018,7 +1085,7 @@ export default function Home() {
                   suffix="MAD"
                   type="number"
                   tooltip={TOOLTIPS.manualFairValue}
-                  helperText="Saisie d'un objectif externe (la calculatrice automatique sera ajoutée ultérieurement)."
+                  helperText="Objectif externe (analyste / broker) comparé automatiquement avec le modèle calculé."
                 />
 
                 <FormField
@@ -1074,8 +1141,37 @@ export default function Home() {
           ticker={data.stockInfo.ticker}
         />
 
+        {/* Calculateur de Juste Valeur & Marge de Sécurité */}
+        <section className="pt-2">
+          <FairValueCalculatorSection
+            calculation={fairValueAnalysis}
+            currentStockPriceMAD={parseFinancialNumber(data.stockInfo.currentPrice)}
+            annualDividendMAD={parseFinancialNumber(data.stockInfo.dividendPerShare)}
+            requiredReturnPercent={data.valuation.requiredReturnRate}
+            desiredMarginOfSafetyPercent={data.valuation.desiredMarginOfSafety}
+            dividendMode={data.valuation.dividendMode || 'exclude'}
+            onDividendModeChange={handleDividendModeChange}
+            onValuationParamChange={handleValuationParamChange}
+          />
+        </section>
+
+        {/* Section Scoring d'Investissement & Décision Finale (Feature 5) */}
+        <section className="pt-2">
+          <InvestmentConfidenceSection
+            report={confidenceReport}
+            companyName={data.stockInfo.companyName}
+            ticker={data.stockInfo.ticker}
+            currentPriceMAD={parseFinancialNumber(data.stockInfo.currentPrice)}
+            targetBuyPriceMAD={fairValueAnalysis.baseScenario?.targetBuyPriceMAD ?? null}
+            fairValueMAD={fairValueAnalysis.baseScenario?.fairValueMAD ?? null}
+            desiredMarginOfSafetyPercent={
+              parseFinancialNumber(data.valuation.desiredMarginOfSafety) ?? 20
+            }
+          />
+        </section>
+
         {/* Synthèse finale en bas de page */}
-        <SummaryCard data={data} />
+        <SummaryCard data={data} confidenceReport={confidenceReport} />
       </main>
     </div>
   );

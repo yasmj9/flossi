@@ -88,6 +88,7 @@ export interface FinancialChecklistData {
     manualFairValue: string;
     desiredMarginOfSafety: string;
     investmentHorizonYears: string;
+    dividendMode?: 'exclude' | 'include';
   };
   shariah: {
     businessActivity: string;

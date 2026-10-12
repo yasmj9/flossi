@@ -76,6 +76,7 @@ export const DEFAULT_CHECKLIST_DATA: FinancialChecklistData = {
     manualFairValue: '',
     desiredMarginOfSafety: '20',
     investmentHorizonYears: '4',
+    dividendMode: 'exclude',
   },
   shariah: {
     businessActivity: '',

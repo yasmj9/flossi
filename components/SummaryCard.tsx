@@ -3,12 +3,14 @@
 import React from 'react';
 import { FinancialChecklistData } from '@/lib/types';
 import { METHODOLOGIES_CONFIG, performShariahScreening } from '@/lib/shariahScreening';
+import { FullInvestmentConfidenceReport } from '@/lib/confidenceScoringEngine';
 
 interface SummaryCardProps {
   data: FinancialChecklistData;
+  confidenceReport?: FullInvestmentConfidenceReport;
 }
 
-export function SummaryCard({ data }: SummaryCardProps) {
+export function SummaryCard({ data, confidenceReport }: SummaryCardProps) {
   const { stockInfo, periodInfo, growth, profitability, debtStability, cashFlow, valuation, shariah } = data;
   const shariahReport = performShariahScreening(data, shariah.methodology);
   const shariahConfig = METHODOLOGIES_CONFIG[shariah.methodology] || METHODOLOGIES_CONFIG.AAOIFI;
@@ -173,6 +175,12 @@ export function SummaryCard({ data }: SummaryCardProps) {
             </span>
           </div>
           <div className="flex justify-between py-0.5">
+            <span className="text-slate-500">Traitement dividendes</span>
+            <span className="font-medium text-slate-900">
+              {valuation.dividendMode === 'include' ? 'Inclus (actualisés)' : 'Exclus (prudent)'}
+            </span>
+          </div>
+          <div className="flex justify-between py-0.5">
             <span className="text-slate-500">Activité Shariah</span>
             <span className="text-slate-900 truncate max-w-[140px]" title={shariah.businessActivity}>
               {shariah.businessActivity || 'Non renseignée'}
@@ -202,6 +210,39 @@ export function SummaryCard({ data }: SummaryCardProps) {
           </div>
         </div>
       </div>
+
+      {confidenceReport && (
+        <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70 p-3 rounded-lg text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-800">Décision Finale :</span>
+            <span
+              className={`font-bold px-2 py-0.5 rounded text-[11px] ${
+                confidenceReport.decision.type === 'BUY_CANDIDATE'
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : confidenceReport.decision.type === 'WAIT'
+                  ? 'bg-amber-100 text-amber-800'
+                  : confidenceReport.decision.type === 'AVOID'
+                  ? 'bg-rose-100 text-rose-800'
+                  : 'bg-slate-200 text-slate-700'
+              }`}
+            >
+              {confidenceReport.decision.shortLabel}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4 text-slate-600">
+            <div>
+              <span>Qualité : </span>
+              <strong className="font-mono text-slate-900">{confidenceReport.qualityScore.totalScore}/100</strong>
+            </div>
+            <div className="w-px h-3.5 bg-slate-300" />
+            <div>
+              <span>Score Achat Mois : </span>
+              <strong className="font-mono text-slate-900">{confidenceReport.buyMonthScore.totalScore}/100</strong>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -13,8 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Analyse d'investissement — Bourse de Casablanca",
-  description: "Analysez les fondamentaux d'une entreprise avant d'investir sur la Bourse de Casablanca.",
+  title: "Stock Investment Analyzer",
+  description: "Analyse d'investissement et checklist fondamentale pour la Bourse de Casablanca avec screening Shariah.",
+  openGraph: {
+    title: "Stock Investment Analyzer",
+    description: "Analyse d'investissement et checklist fondamentale pour la Bourse de Casablanca avec screening Shariah.",
+  },
 };
 
 export default function RootLayout({
