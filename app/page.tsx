@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   FileText,
   CheckCircle2,
@@ -22,11 +22,13 @@ import {
   validateForm,
   DEFAULT_CHECKLIST_DATA,
 } from '@/lib/storage';
+import { computeFundamentalAnalysis } from '@/lib/financialMath';
 import { TOOLTIPS } from '@/lib/tooltips';
 import { FormField } from '@/components/FormField';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { HeaderActions } from '@/components/HeaderActions';
 import { SummaryCard } from '@/components/SummaryCard';
+import { FundamentalAnalysisDashboard } from '@/components/FundamentalAnalysisDashboard';
 import { Tooltip } from '@/components/Tooltip';
 
 const SECTORS = [
@@ -57,6 +59,8 @@ export default function Home() {
     type: 'success' | 'error' | 'info';
   } | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const analysis = useMemo(() => computeFundamentalAnalysis(data), [data]);
 
   // Load from localStorage on client mount
   useEffect(() => {
@@ -1152,6 +1156,15 @@ export default function Home() {
             </div>
           </CollapsibleSection>
         </div>
+
+        {/* Dashboard d'analyse fondamentale */}
+        <FundamentalAnalysisDashboard
+          analysis={analysis}
+          unit={data.periodInfo.unit}
+          reportType={data.periodInfo.reportType}
+          companyName={data.stockInfo.companyName}
+          ticker={data.stockInfo.ticker}
+        />
 
         {/* Synthèse finale en bas de page */}
         <SummaryCard data={data} />
