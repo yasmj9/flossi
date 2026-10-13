@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"PORT=3001 tsx --tsconfig api/tsconfig.json api/src/main.ts\" \"next dev client -p 3000 -H 0.0.0.0 --turbopack\"",
-    "build": "npm --prefix api run build && next build client",
-    "start": "concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"node api/dist/main.js\" \"next start client -p 3000\"",
-    "test": "tsx client/lib/financialMath.test.ts && tsx client/lib/shariahScreening.test.ts && tsx client/lib/decisionsEngine.test.ts",
-    "lint": "eslint client"
+    "dev": "concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"PORT=3001 npx tsx --tsconfig api/tsconfig.json api/src/main.ts\" \"npx next dev client -p 3000 --turbopack\"",
+    "build": "npm --prefix api run build && npx next build client",
+    "start": "concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"node api/dist/main.js\" \"npx next start client -p 3000\"",
+    "test": "npx tsx client/lib/financialMath.test.ts && npx tsx client/lib/shariahScreening.test.ts && npx tsx client/lib/decisionsEngine.test.ts",
+    "lint": "npx eslint client"
   },
   "dependencies": {
     "@nestjs/common": "^12.1.3",
