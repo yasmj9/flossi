@@ -3,19 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000 -H 0.0.0.0",
-    "build": "next build",
-    "start": "next start",
-    "test": "tsx lib/financialMath.test.ts && tsx lib/shariahScreening.test.ts && tsx lib/decisionsEngine.test.ts",
-    "lint": "eslint"
+    "dev": "concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"PORT=3001 tsx --tsconfig api/tsconfig.json api/src/main.ts\" \"next dev client -p 3000 -H 0.0.0.0 --turbopack\"",
+    "build": "npm --prefix api run build && next build client",
+    "start": "concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"node api/dist/main.js\" \"next start client -p 3000\"",
+    "test": "tsx client/lib/financialMath.test.ts && tsx client/lib/shariahScreening.test.ts && tsx client/lib/decisionsEngine.test.ts",
+    "lint": "eslint client"
   },
   "dependencies": {
+    "@nestjs/common": "^12.1.3",
+    "@nestjs/core": "^12.1.3",
+    "@nestjs/platform-express": "^12.1.3",
+    "@types/pg": "^8.23.1",
+    "concurrently": "^10.0.6",
     "lucide-react": "^1.55.0",
     "next": "16.4.0",
+    "pg": "^8.23.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
+    "@nestjs/cli": "^12.0.8",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
