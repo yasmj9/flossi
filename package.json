@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"PORT=3001 npx tsx --tsconfig api/tsconfig.json api/src/main.ts\" \"npx next dev client -p 3000 --turbopack\"",
-    "build": "npm --prefix api run build && npx next build client",
-    "start": "concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"node api/dist/main.js\" \"npx next start client -p 3000\"",
-    "test": "npx tsx client/lib/financialMath.test.ts && npx tsx client/lib/shariahScreening.test.ts && npx tsx client/lib/decisionsEngine.test.ts",
-    "lint": "npx eslint client"
+    "dev": "./node_modules/.bin/concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"PORT=3001 ./node_modules/.bin/tsx --tsconfig api/tsconfig.json api/src/main.ts\" \"./node_modules/.bin/next dev client -p 3000 --turbopack\"",
+    "build": "npm --prefix api run build && ./node_modules/.bin/next build client",
+    "start": "./node_modules/.bin/concurrently -k -p \"[{name}]\" -n \"NEST,NEXT\" -c \"blue,green\" \"node api/dist/main.js\" \"./node_modules/.bin/next start client -p 3000\"",
+    "test": "./node_modules/.bin/tsx client/lib/financialMath.test.ts && ./node_modules/.bin/tsx client/lib/shariahScreening.test.ts && ./node_modules/.bin/tsx client/lib/decisionsEngine.test.ts",
+    "lint": "./node_modules/.bin/eslint client"
   },
   "dependencies": {
     "@nestjs/common": "^12.1.3",
